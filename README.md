@@ -2,14 +2,18 @@
 
 [[Project Page]](https://wangpeng000.github.io/BAD-NeRF/) [[Original Code]](https://github.com/WU-CVGL/BAD-NeRF) [[ArXiv]](https://arxiv.org/abs/2211.12853) [[CVPR 2023]](https://openaccess.thecvf.com/content/CVPR2023/html/Wang_BAD-NeRF_Bundle_Adjusted_Deblur_Neural_Radiance_Fields_CVPR_2023_paper.html) [[Youtube]](https://www.youtube.com/watch?v=xoES4eONYoA) [[Bilibili]](https://www.bilibili.com/video/BV1Gz4y1e7oH/)
 
-This is an official **nerfstudio**-framework-based implementation for 😈**BAD-NeRF**.
+This is an official **nerfstudio**-framework-based implementation of 😈**BAD-NeRF**.
+
+
+https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/cb752fba-ab88-4683-a986-16ed58380924
+
 
 ## Quickstart
 
 ### 1. Installation
 
-You can check out the original [`nerfstudio`](https://github.com/nerfstudio-project/nerfstudio) repo
-for prerequisites and dependencies. Our implementation is based on [this PR](https://github.com/nerfstudio-project/nerfstudio/pull/2092) so if you have an older version of nerfstudio installed, please `git clone` the main branch and install the latest version.
+You may check out the original [`nerfstudio`](https://github.com/nerfstudio-project/nerfstudio) repo
+for prerequisites and dependencies. Our implementation is based on [this PR](https://github.com/nerfstudio-project/nerfstudio/pull/2092), so if you have an older version of nerfstudio installed, please `git clone` the main branch and install the latest version.
 
 Besides, we use [pypose](https://github.com/pypose/pypose) to implement the pose interpolation. You can install it with:
 
