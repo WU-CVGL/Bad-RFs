@@ -4,8 +4,7 @@
 
 This is an official **nerfstudio**-framework-based implementation of *😈BAD-NeRF: Bundle Adjusted Deblur Neural Radiance Fields*. Now you can train a scene from blurry images in minutes!
 
-<div><video autoplay loop controls src="https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/cb752fba-ab88-4683-a986-16ed58380924" muted="true"></video></div>
-
+https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/c98cc480-24bb-47e9-b5b7-3cac75e092f7
 
 ## Quickstart
 
