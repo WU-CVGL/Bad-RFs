@@ -1,0 +1,14 @@
+[project]
+name = "badnerf"
+version = "1.0.0"
+
+dependencies=[
+    "nerfstudio",
+    "pypose"
+]
+
+[tool.setuptools.packages.find]
+include = ["badnerf*"]
+
+[project.entry-points.'nerfstudio.method_configs']
+badnerf_nerfacto = 'badnerf.badnerf_config:badnerf_nerfacto'
