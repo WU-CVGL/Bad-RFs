@@ -7,6 +7,7 @@ import os
 from dataclasses import dataclass, field
 from typing import Type
 
+os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
 import torch
 
@@ -17,8 +18,6 @@ from nerfstudio.utils.misc import step_check
 from nerfstudio.utils.writer import EventName, TimeWriter, to8b
 
 from badnerf.pipelines.badnerf_vanilla_pipeline import BadNerfVanillaPipeline, BadNerfVanillaPipelineConfig
-
-os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 
 
 @dataclass

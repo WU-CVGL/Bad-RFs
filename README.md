@@ -1,11 +1,10 @@
-# 😈BAD-NeRFstudio
+# BAD-NeRFstudio: 😈BAD-NeRF Accelerated
 
 [[Project Page]](https://wangpeng000.github.io/BAD-NeRF/) [[Original Code]](https://github.com/WU-CVGL/BAD-NeRF) [[ArXiv]](https://arxiv.org/abs/2211.12853) [[CVPR 2023]](https://openaccess.thecvf.com/content/CVPR2023/html/Wang_BAD-NeRF_Bundle_Adjusted_Deblur_Neural_Radiance_Fields_CVPR_2023_paper.html) [[Youtube]](https://www.youtube.com/watch?v=xoES4eONYoA) [[Bilibili]](https://www.bilibili.com/video/BV1Gz4y1e7oH/)
 
-This is an official **nerfstudio**-framework-based implementation of 😈**BAD-NeRF**.
+This is an official **nerfstudio**-framework-based implementation of *😈BAD-NeRF: Bundle Adjusted Deblur Neural Radiance Fields*. Now you can train a scene from blurry images in minutes!
 
-
-https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/cb752fba-ab88-4683-a986-16ed58380924
+<div><video autoplay loop controls src="https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/cb752fba-ab88-4683-a986-16ed58380924" muted="true"></video></div>
 
 
 ## Quickstart
