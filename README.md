@@ -31,7 +31,7 @@ pip install -e .
 
 How to convert a deblur-nerf dataset for this dataparser:
 
-1. Use the [`ns-process-data` tool from Nerfstudio](https://docs.nerf.studio/en/latest/quickstart/custom_dataset.html)
+1. Use the [`ns-process-data` tool from Nerfstudio](https://docs.nerf.studio/reference/cli/ns_process_data.html)
     to process deblur-nerf training images. 
     
     For example, if the

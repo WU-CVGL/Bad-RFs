@@ -28,8 +28,6 @@ class BadNerfDataManager(VanillaDataManager):  # pylint: disable=abstract-method
         config: the DataManagerConfig used to instantiate class
     """
 
-    _target: Type = field(default_factory=lambda: BadNerfDataManager)
-    """Target class to instantiate."""
     config: BadNerfDataManagerConfig
 
     def setup_eval(self):
