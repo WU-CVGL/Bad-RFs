@@ -93,7 +93,7 @@ class BadNerfCameraOptimizer(nn.Module):
         if self.config.mode == "off":
             pass
         else:
-            outputs.append(self.pose_adjustment.Exp()[indices, :])
+            outputs.append(self.pose_adjustment.Exp()[indices.int(), :])
 
         # Detach non-trainable indices by setting to identity transform
         if (
@@ -109,7 +109,10 @@ class BadNerfCameraOptimizer(nn.Module):
         # Return: identity if no transforms are needed, otherwise composite transforms together.
         if len(outputs) == 0:
             if self.config.mode == "linear":
-                return pp.identity_SE3((indices.shape[0], self.num_control_knots), device=self.pose_adjustment.device)
+                return pp.identity_SE3(
+                    *(indices.shape[0], self.num_control_knots),
+                    device=self.pose_adjustment.device
+                )
             else:
                 assert_never(self.config.mode)
         return functools.reduce(pp.mul, outputs)
@@ -163,6 +166,8 @@ class BadNerfCameraOptimizer(nn.Module):
             return x.repeat_interleave(self.config.num_virtual_views, dim=0)
 
         camera_ids = ray_bundle.camera_indices.squeeze()
+        if camera_ids.dim() == 0:
+            camera_ids = camera_ids[None]
         if self.config.mode == "linear":
             if training:
                 q, t = self.spline_interpolation_bundle(camera_ids)

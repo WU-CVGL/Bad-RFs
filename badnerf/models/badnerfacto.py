@@ -33,7 +33,7 @@ class BadNerfactoModelConfig(NerfactoModelConfig):
     )
     """The target class to be instantiated."""
 
-    camera_optimizer: BadNerfCameraOptimizerConfig
+    camera_optimizer: BadNerfCameraOptimizerConfig = BadNerfCameraOptimizerConfig()
     """Config of the camera optimizer to use"""
 
 
