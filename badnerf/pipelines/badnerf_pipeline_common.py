@@ -36,18 +36,18 @@ def get_average_eval_metrics_and_images(pipeline: VanillaPipeline, step: Optiona
             transient=True,
     ) as progress:
         task = progress.add_task("[green]Evaluating all eval images...", total=num_images)
-        for camera_ray_bundle, batch in pipeline.datamanager.fixed_indices_eval_dataloader:
+        for camera, batch in pipeline.datamanager.fixed_indices_eval_dataloader:
             # time this the following line
             inner_start = time()
-            height, width = camera_ray_bundle.shape[:2]
+            outputs = pipeline.model.get_outputs_for_camera(camera=camera)
+            height, width = camera.height, camera.width
             num_rays = height * width
-            outputs = pipeline.model.get_outputs_for_camera_ray_bundle(camera_ray_bundle)
             metrics_dict, _ = pipeline.model.get_image_metrics_and_images(outputs, batch)
             assert "num_rays_per_sec" not in metrics_dict
-            metrics_dict["num_rays_per_sec"] = num_rays / (time() - inner_start)
+            metrics_dict["num_rays_per_sec"] = (num_rays / (time() - inner_start)).item()
             fps_str = "fps"
             assert fps_str not in metrics_dict
-            metrics_dict[fps_str] = metrics_dict["num_rays_per_sec"] / (height * width)
+            metrics_dict[fps_str] = (metrics_dict["num_rays_per_sec"] / (height * width)).item()
             metrics_dict_list.append(metrics_dict)
 
             image_idx = batch['image_idx']
