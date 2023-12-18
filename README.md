@@ -4,7 +4,24 @@
 
 This is an official **nerfstudio**-framework-based implementation of *😈BAD-NeRF: Bundle Adjusted Deblur Neural Radiance Fields*. Now you can train a scene from blurry images in minutes!
 
+## Accelerated training:
+
 https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/c98cc480-24bb-47e9-b5b7-3cac75e092f7
+
+## Results on [Deblur-NeRF](https://github.com/limacv/Deblur-NeRF/)'s real-world data:
+
+https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/944a6016-6d6a-4609-b8e3-1e04f768d3dd
+
+https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/dd87c08e-9428-45a4-a609-e26277be1b2e
+
+https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/13949669-971c-4d2c-a1b9-bd7ea8d82147
+
+https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/f45b7c47-148c-4a63-a992-66855245c5c0
+
+> Left: BAD-NeRFacto deblured novel-view renderings;
+>
+> Right: Input images.
+
 
 ## Quickstart
 
@@ -52,12 +69,18 @@ How to convert a deblur-nerf dataset for this dataparser:
 
 > Note1: If you do not have the testing images, e.g. when training with real-world data (like those in [Deblur-NeRF](https://limacv.github.io/deblurnerf/)), you can skit the step 2.
 >
-> Note2: In the BadNerfDataparser, since nerfstudio does not model the NDC contraction for LLFF data, we set `scale_factor = 0.25`, which makes nerfacto works well on LLFF datasets. If your data is not captured in a LLFF fashion (i.e. forward-facing), such as object-centric like Mip-NeRF 360, you can set the `scale_factor = 1.`
+> Note2: In the BadNerfDataparser, since nerfstudio does not model the NDC scene contraction for LLFF data, we set `scale_factor = 0.25`, which makes nerfacto works well on LLFF datasets. If your data is not captured in a LLFF fashion (i.e. forward-facing), such as object-centric like Mip-NeRF 360, you can set the `scale_factor = 1.`
 
 ### 3. Training
 
 ```bash
 ns-train bad-nerfacto --experiment_name tanabata --data data/bad-nerf/blurtanabata --vis viewer+tensorboard
+```
+
+### 4. Render videos
+
+```bash
+ns-render interpolate --load-config outputs/tanabata/bad-nerfacto/<your_experiment_date_time>/config.yml --render-nearest-camera True --order-poses True --output-path renders/<your_filename>.mp4
 ```
 
 #### Debug with your IDE
