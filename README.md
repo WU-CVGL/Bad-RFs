@@ -2,13 +2,13 @@
 
 [[Project Page]](https://wangpeng000.github.io/BAD-NeRF/) [[Original Code]](https://github.com/WU-CVGL/BAD-NeRF) [[ArXiv]](https://arxiv.org/abs/2211.12853) [[CVPR 2023]](https://openaccess.thecvf.com/content/CVPR2023/html/Wang_BAD-NeRF_Bundle_Adjusted_Deblur_Neural_Radiance_Fields_CVPR_2023_paper.html) [[Youtube]](https://www.youtube.com/watch?v=xoES4eONYoA) [[Bilibili]](https://www.bilibili.com/video/BV1Gz4y1e7oH/)
 
-This is an official **nerfstudio**-framework-based implementation of *😈BAD-NeRF: Bundle Adjusted Deblur Neural Radiance Fields*. Now you can train a scene from blurry images in minutes!
+This is an official **[nerfstudio](https://github.com/nerfstudio-project/nerfstudio)**-framework-based implementation of our CVPR2023 paper: *😈BAD-NeRF: Bundle Adjusted Deblur Neural Radiance Fields*. Now you can train a scene from blurry images in minutes!
 
 ## Accelerated training:
 
 https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/c98cc480-24bb-47e9-b5b7-3cac75e092f7
 
-## Results on [Deblur-NeRF](https://github.com/limacv/Deblur-NeRF/)'s real-world data:
+## Results on [Deblur-NeRF](https://github.com/limacv/Deblur-NeRF/)'s real-world motion-blurred data:
 
 https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/944a6016-6d6a-4609-b8e3-1e04f768d3dd
 
@@ -67,7 +67,7 @@ How to convert a deblur-nerf dataset for this dataparser:
 
 3. The folder `data/bad-nerf/blurtanabata` is ready.
 
-> Note1: If you do not have the testing images, e.g. when training with real-world data (like those in [Deblur-NeRF](https://limacv.github.io/deblurnerf/)), you can skit the step 2.
+> Note1: If you do not have the testing images, e.g. when training with real-world data (like those in [Deblur-NeRF](https://limacv.github.io/deblurnerf/)), you can skip the step 2.
 >
 > Note2: In the BadNerfDataparser, since nerfstudio does not model the NDC scene contraction for LLFF data, we set `scale_factor = 0.25`, which makes nerfacto works well on LLFF datasets. If your data is not captured in a LLFF fashion (i.e. forward-facing), such as object-centric like Mip-NeRF 360, you can set the `scale_factor = 1.`
 
@@ -83,11 +83,11 @@ ns-train bad-nerfacto --experiment_name tanabata --data data/bad-nerf/blurtanaba
 ns-render interpolate --load-config outputs/tanabata/bad-nerfacto/<your_experiment_date_time>/config.yml --render-nearest-camera True --order-poses True --output-path renders/<your_filename>.mp4
 ```
 
-#### Debug with your IDE
+### 5. Debug with your IDE
 
 Open this repo with your IDE, create a configuration, and set the executing python script path to `<nerfstudio_path>/nerfstudio/scripts/train.py`, with the parameters above.
 
-## Performance Reference
+## Deblur Performance Reference
 
 | Model                          | Dataset      | PSNR↑           | SSIM↑             | LPIPS↓            |Train Time (steps@time)|
 |--------------------------------|--------------|-----------------|-------------------|-------------------|-----------------------|
