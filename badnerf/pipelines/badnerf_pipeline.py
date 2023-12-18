@@ -12,18 +12,18 @@ import badnerf.pipelines.badnerf_pipeline_common as _common
 
 
 @dataclass
-class BadNerfVanillaPipelineConfig(VanillaPipelineConfig):
-    """BAD-NeRFacto pipeline config"""
+class BadNerfPipelineConfig(VanillaPipelineConfig):
+    """BAD-NeRF pipeline config"""
 
-    _target: Type = field(default_factory=lambda: BadNerfVanillaPipeline)
+    _target: Type = field(default_factory=lambda: BadNerfPipeline)
     num_virtual_views: int = 10
     """Number of virtual sharp images to re-blur"""
 
 
-class BadNerfVanillaPipeline(VanillaPipeline):
-    """BAD-NeRFacto pipeline"""
+class BadNerfPipeline(VanillaPipeline):
+    """BAD-NeRF pipeline"""
 
-    config: BadNerfVanillaPipelineConfig
+    config: BadNerfPipelineConfig
 
     @profiler.time_function
     def get_average_eval_image_metrics(self, step: Optional[int] = None):

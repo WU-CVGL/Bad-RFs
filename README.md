@@ -42,13 +42,17 @@ How to convert a deblur-nerf dataset for this dataparser:
     ns-process-data images --data llff_data/blurtanabata/images --output-dir data/bad-nerf/blurtanabata
     ```
 
-2. Copy the testing images to the new folder
+2. Copy the testing images (ground truth sharp images) to the new folder
 
     ```
     cp llff_data/blurtanabata/images_test data/bad-nerf/blurtanabata/
     ```
 
 3. The folder `data/bad-nerf/blurtanabata` is ready.
+
+> Note1: If you do not have the testing images, e.g. when training with real-world data (like those in [Deblur-NeRF](https://limacv.github.io/deblurnerf/)), you can skit the step 2.
+>
+> Note2: In the BadNerfDataparser, since nerfstudio does not model the NDC contraction for LLFF data, we set `scale_factor = 0.25`, which makes nerfacto works well on LLFF datasets. If your data is not captured in a LLFF fashion (i.e. forward-facing), such as object-centric like Mip-NeRF 360, you can set the `scale_factor = 1.`
 
 ### 3. Training
 

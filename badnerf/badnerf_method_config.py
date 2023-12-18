@@ -10,19 +10,19 @@ from nerfstudio.plugins.types import MethodSpecification
 from badnerf.cameras.badnerf_camera_optimizer import BadNerfCameraOptimizerConfig
 from badnerf.data.badnerf_datamanager import BadNerfDataManagerConfig
 from badnerf.data.badnerf_dataparser import BadNerfDataParserConfig
-from badnerf.engine.badnerf_vanilla_trainer import BadNerfVanillaTrainerConfig
+from badnerf.engine.badnerf_trainer import BadNerfTrainerConfig
 from badnerf.models.badnerfacto import BadNerfactoModelConfig
-from badnerf.pipelines.badnerf_vanilla_pipeline import BadNerfVanillaPipelineConfig
+from badnerf.pipelines.badnerf_pipeline import BadNerfPipelineConfig
 
 badnerf_nerfacto = MethodSpecification(
-    config=BadNerfVanillaTrainerConfig(
+    config=BadNerfTrainerConfig(
         method_name="bad-nerfacto",
         steps_per_eval_all_images=500,
         steps_per_save=2000,
         max_num_iterations=30001,
         mixed_precision=False,
         use_grad_scaler=True,
-        pipeline=BadNerfVanillaPipelineConfig(
+        pipeline=BadNerfPipelineConfig(
             datamanager=BadNerfDataManagerConfig(
                 dataparser=BadNerfDataParserConfig(),
                 train_num_rays_per_batch=1024,

@@ -138,9 +138,13 @@ class BadNerfDataParser(Nerfstudio):
         image_filenames = sorted(image_filenames)
         if split in ["val", "test"]:
             eval_images_path = data_dir / "images_test"
-            eval_images = _find_files(eval_images_path, exts=["*.png", "*.jpg", "*.JPG", "*.PNG"])
+            if eval_images_path.exists():
+                eval_images = _find_files(eval_images_path, exts=["*.png", "*.jpg", "*.JPG", "*.PNG"])
+            else:
+                eval_images = []
+                print("[WARN] No test images found.")
             num_eval_images = len(eval_images)
-            assert num_eval_images == num_images
+            print(f"[INFO] Found {num_eval_images} test images.")
             image_filenames = eval_images
 
         poses_dict_ordered = OrderedDict()

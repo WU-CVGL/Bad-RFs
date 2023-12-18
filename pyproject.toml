@@ -10,5 +10,8 @@ dependencies=[
 [tool.setuptools.packages.find]
 include = ["badnerf*"]
 
+[project.entry-points.'nerfstudio.dataparser_configs']
+badnerf-data = 'badnerf.badnerf_dataparser_config:BadNerfDataparser'
+
 [project.entry-points.'nerfstudio.method_configs']
-badnerf_nerfacto = 'badnerf.badnerf_config:badnerf_nerfacto'
+badnerf_nerfacto = 'badnerf.badnerf_method_config:badnerf_nerfacto'

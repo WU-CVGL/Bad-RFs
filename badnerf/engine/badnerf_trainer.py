@@ -5,7 +5,7 @@ BAD-NeRF vanilla trainer.
 import functools
 import os
 from dataclasses import dataclass, field
-from typing import Type
+from typing import Literal, Type
 
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
@@ -17,19 +17,19 @@ from nerfstudio.utils.decorators import check_eval_enabled
 from nerfstudio.utils.misc import step_check
 from nerfstudio.utils.writer import EventName, TimeWriter, to8b
 
-from badnerf.pipelines.badnerf_vanilla_pipeline import BadNerfVanillaPipeline, BadNerfVanillaPipelineConfig
+from badnerf.pipelines.badnerf_pipeline import BadNerfPipeline, BadNerfPipelineConfig
 
 
 @dataclass
-class BadNerfVanillaTrainerConfig(TrainerConfig):
+class BadNerfTrainerConfig(TrainerConfig):
     """Configuration for BAD-NeRF training"""
 
-    _target: Type = field(default_factory=lambda: BadNerfVanillaTrainer)
-    pipeline: BadNerfVanillaPipelineConfig = BadNerfVanillaPipelineConfig()
+    _target: Type = field(default_factory=lambda: BadNerfTrainer)
+    pipeline: BadNerfPipelineConfig = BadNerfPipelineConfig()
     """BAD-NeRF pipeline configuration"""
 
 
-class BadNerfVanillaTrainer(Trainer):
+class BadNerfTrainer(Trainer):
     """BAD-NeRF Trainer class
 
     Args:
@@ -48,8 +48,21 @@ class BadNerfVanillaTrainer(Trainer):
         training_state: Current model training state.
     """
 
-    config: BadNerfVanillaTrainerConfig
-    pipeline: BadNerfVanillaPipeline
+    config: BadNerfTrainerConfig
+    pipeline: BadNerfPipeline
+
+    def setup(self, test_mode: Literal["test", "val", "inference"] = "val") -> None:
+        """Setup the trainer.
+
+        Args:
+            test_mode: The test mode to use.
+        """
+        super().setup(test_mode=test_mode)
+        # disable eval if no eval images
+        if self.pipeline.datamanager.eval_dataset.cameras is None:
+            self.config.steps_per_eval_all_images = 9e9
+            self.config.steps_per_eval_batch = 9e9
+            self.config.steps_per_eval_image = 9e9
 
     @check_eval_enabled
     @profiler.time_function
