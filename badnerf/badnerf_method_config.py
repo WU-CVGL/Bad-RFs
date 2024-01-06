@@ -30,7 +30,7 @@ badnerf_nerfacto = MethodSpecification(
             ),
             model=BadNerfactoModelConfig(
                 eval_num_rays_per_chunk=1 << 15,
-                camera_optimizer=BadNerfCameraOptimizerConfig(mode="linear", num_virtual_views=10),
+                camera_optimizer=BadNerfCameraOptimizerConfig(mode="cubic", num_virtual_views=10),
             ),
         ),
         optimizers={

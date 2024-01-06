@@ -16,8 +16,6 @@ class BadNerfPipelineConfig(VanillaPipelineConfig):
     """BAD-NeRF pipeline config"""
 
     _target: Type = field(default_factory=lambda: BadNerfPipeline)
-    num_virtual_views: int = 10
-    """Number of virtual sharp images to re-blur"""
 
 
 class BadNerfPipeline(VanillaPipeline):
