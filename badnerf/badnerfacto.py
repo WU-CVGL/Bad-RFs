@@ -21,7 +21,7 @@ from nerfstudio.model_components.losses import (
 from nerfstudio.models.nerfacto import NerfactoModel, NerfactoModelConfig
 from nerfstudio.utils import colormaps
 
-from badnerf.cameras.badnerf_camera_optimizer import BadNerfCameraOptimizer, BadNerfCameraOptimizerConfig
+from badnerf.badnerf_camera_optimizer import BadNerfCameraOptimizer, BadNerfCameraOptimizerConfig
 
 
 @dataclass

@@ -18,7 +18,7 @@ from typing_extensions import assert_never
 from nerfstudio.cameras.rays import RayBundle
 from nerfstudio.configs.base_config import InstantiateConfig
 
-from badnerf.cameras.spline import (
+from badnerf.spline import (
     cubic_bspline_interpolation,
     linear_interpolation,
     linear_interpolation_mid,
@@ -105,7 +105,7 @@ class BadNerfCameraOptimizer(nn.Module):
         else:
             indices = indices.int()
             unique_indices = torch.unique(indices)
-            camera_opt = self.pose_adjustment[unique_indices].Exp()
+            camera_opt = self.pose_adjustment[unique_indices, ...].Exp()
             outputs.append(self._interpolate(camera_opt, is_training)[indices, ...])
 
         # Detach non-trainable indices by setting to identity transform

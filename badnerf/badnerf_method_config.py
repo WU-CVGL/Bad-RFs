@@ -7,17 +7,19 @@ from nerfstudio.engine.optimizers import AdamOptimizerConfig
 from nerfstudio.engine.schedulers import ExponentialDecaySchedulerConfig
 from nerfstudio.plugins.types import MethodSpecification
 
-from badnerf.cameras.badnerf_camera_optimizer import BadNerfCameraOptimizerConfig
-from badnerf.data.badnerf_datamanager import BadNerfDataManagerConfig
-from badnerf.data.badnerf_dataparser import BadNerfDataParserConfig
-from badnerf.engine.badnerf_trainer import BadNerfTrainerConfig
-from badnerf.models.badnerfacto import BadNerfactoModelConfig
-from badnerf.pipelines.badnerf_pipeline import BadNerfPipelineConfig
+from badnerf.badnerf_camera_optimizer import BadNerfCameraOptimizerConfig
+from badnerf.badnerf_datamanager import BadNerfDataManagerConfig
+from badnerf.badnerf_dataparser import BadNerfDataParserConfig
+from badnerf.badnerf_pipeline import BadNerfPipelineConfig
+from badnerf.badnerf_trainer import BadNerfTrainerConfig
+from badnerf.badnerfacto import BadNerfactoModelConfig
 
 badnerf_nerfacto = MethodSpecification(
     config=BadNerfTrainerConfig(
         method_name="bad-nerfacto",
-        steps_per_eval_all_images=500,
+        steps_per_eval_batch=500,
+        steps_per_eval_image=500,
+        steps_per_eval_all_images=2000,
         steps_per_save=2000,
         max_num_iterations=30001,
         mixed_precision=False,

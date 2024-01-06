@@ -8,7 +8,7 @@ from typing import Type, Optional
 from nerfstudio.pipelines.base_pipeline import VanillaPipeline, VanillaPipelineConfig
 from nerfstudio.utils import profiler
 
-import badnerf.pipelines.badnerf_pipeline_common as _common
+import badnerf.badnerf_pipeline_common as _common
 
 
 @dataclass

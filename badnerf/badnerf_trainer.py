@@ -17,7 +17,7 @@ from nerfstudio.utils.decorators import check_eval_enabled
 from nerfstudio.utils.misc import step_check
 from nerfstudio.utils.writer import EventName, TimeWriter, to8b
 
-from badnerf.pipelines.badnerf_pipeline import BadNerfPipeline, BadNerfPipelineConfig
+from badnerf.badnerf_pipeline import BadNerfPipeline, BadNerfPipelineConfig
 
 
 @dataclass
