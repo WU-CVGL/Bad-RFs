@@ -1,29 +1,29 @@
 """
-BAD-NeRF vanilla trainer.
+BAD-NeRF trainer.
 """
+from __future__ import annotations
 
+import dataclasses
 import functools
-import os
-from dataclasses import dataclass, field
 from typing import Literal, Type
+from typing_extensions import assert_never
 
-os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
-import cv2
 import torch
-
+from dataclasses import dataclass, field
+from nerfstudio.engine.callbacks import TrainingCallbackAttributes
 from nerfstudio.engine.trainer import Trainer, TrainerConfig
 from nerfstudio.utils import profiler, writer
 from nerfstudio.utils.decorators import check_eval_enabled
 from nerfstudio.utils.misc import step_check
-from nerfstudio.utils.writer import EventName, TimeWriter, to8b
+from nerfstudio.utils.writer import EventName, TimeWriter
 
 from badnerf.badnerf_pipeline import BadNerfPipeline, BadNerfPipelineConfig
+from badnerf.badnerf_viewer import BadNerfViewer
 
 
 @dataclass
 class BadNerfTrainerConfig(TrainerConfig):
     """Configuration for BAD-NeRF training"""
-
     _target: Type = field(default_factory=lambda: BadNerfTrainer)
     pipeline: BadNerfPipelineConfig = BadNerfPipelineConfig()
     """BAD-NeRF pipeline configuration"""
@@ -31,12 +31,10 @@ class BadNerfTrainerConfig(TrainerConfig):
 
 class BadNerfTrainer(Trainer):
     """BAD-NeRF Trainer class
-
     Args:
         config: The configuration object.
         local_rank: Local rank of the process.
         world_size: World size of the process.
-
     Attributes:
         config: The configuration object.
         local_rank: Local rank of the process.
@@ -47,28 +45,81 @@ class BadNerfTrainer(Trainer):
         callbacks: The callbacks object.
         training_state: Current model training state.
     """
-
     config: BadNerfTrainerConfig
     pipeline: BadNerfPipeline
 
     def setup(self, test_mode: Literal["test", "val", "inference"] = "val") -> None:
         """Setup the trainer.
-
         Args:
             test_mode: The test mode to use.
         """
-        super().setup(test_mode=test_mode)
+        # Overriding original setup since we want to use our BadNerfViewer
+        self.pipeline = self.config.pipeline.setup(
+            device=self.device,
+            test_mode=test_mode,
+            world_size=self.world_size,
+            local_rank=self.local_rank,
+            grad_scaler=self.grad_scaler,
+        )
+        self.optimizers = self.setup_optimizers()
+
+        # set up viewer if enabled
+        viewer_log_path = self.base_dir / self.config.viewer.relative_log_filename
+        self.viewer_state, banner_messages = None, None
+        if self.config.is_viewer_legacy_enabled() and self.local_rank == 0:
+            assert_never(self.config.vis)
+        if self.config.is_viewer_enabled() and self.local_rank == 0:
+            datapath = self.config.data
+            if datapath is None:
+                datapath = self.base_dir
+            self.viewer_state = BadNerfViewer(
+                self.config.viewer,
+                log_filename=viewer_log_path,
+                datapath=datapath,
+                pipeline=self.pipeline,
+                trainer=self,
+                train_lock=self.train_lock,
+                share=self.config.viewer.make_share_url,
+            )
+            banner_messages = [f"Viewer at: {self.viewer_state.viewer_url}"]
+        self._check_viewer_warnings()
+
+        self._load_checkpoint()
+
+        self.callbacks = self.pipeline.get_training_callbacks(
+            TrainingCallbackAttributes(
+                optimizers=self.optimizers,
+                grad_scaler=self.grad_scaler,
+                pipeline=self.pipeline,
+            )
+        )
+
+        # set up writers/profilers if enabled
+        writer_log_path = self.base_dir / self.config.logging.relative_log_dir
+        writer.setup_event_writer(
+            self.config.is_wandb_enabled(),
+            self.config.is_tensorboard_enabled(),
+            self.config.is_comet_enabled(),
+            log_dir=writer_log_path,
+            experiment_name=self.config.experiment_name,
+            project_name=self.config.project_name,
+        )
+        writer.setup_local_writer(
+            self.config.logging, max_iter=self.config.max_num_iterations, banner_messages=banner_messages
+        )
+        writer.put_config(name="config", config_dict=dataclasses.asdict(self.config), step=0)
+        profiler.setup_profiler(self.config.logging, writer_log_path)
+
         # disable eval if no eval images
         if self.pipeline.datamanager.eval_dataset.cameras is None:
-            self.config.steps_per_eval_all_images = 9e9
-            self.config.steps_per_eval_batch = 9e9
-            self.config.steps_per_eval_image = 9e9
+            self.config.steps_per_eval_all_images = int(9e9)
+            self.config.steps_per_eval_batch = int(9e9)
+            self.config.steps_per_eval_image = int(9e9)
 
     @check_eval_enabled
     @profiler.time_function
     def eval_iteration(self, step: int) -> None:
         """Run one iteration with different batch/image/all image evaluations depending on step size.
-
         Args:
             step: Current training step.
         """
@@ -79,7 +130,6 @@ class BadNerfTrainer(Trainer):
             writer.put_scalar(name="Eval Loss", scalar=eval_loss, step=step)
             writer.put_dict(name="Eval Loss Dict", scalar_dict=eval_loss_dict, step=step)
             writer.put_dict(name="Eval Metrics Dict", scalar_dict=eval_metrics_dict, step=step)
-
         # one eval image
         if step_check(step, self.config.steps_per_eval_image):
             with TimeWriter(writer, EventName.TEST_RAYS_PER_SEC, write=False) as test_t:
@@ -97,21 +147,6 @@ class BadNerfTrainer(Trainer):
 
         # all eval images
         if step_check(step, self.config.steps_per_eval_all_images):
-            metrics_dict, images_dicts = self.pipeline.get_average_eval_metrics_and_images(step=step)
+            # BAD-NeRF: pass output_path to save rendered images
+            metrics_dict = self.pipeline.get_average_eval_image_metrics(step=step, output_path=self.base_dir)
             writer.put_dict(name="Eval Images Metrics Dict (all images)", scalar_dict=metrics_dict, step=step)
-
-            writer_log_path = self.base_dir / self.config.logging.relative_log_dir
-            image_dir = writer_log_path / f"{step:06}"
-            if not image_dir.exists():
-                image_dir.mkdir(parents=True)
-
-            for image_idx, image_dict in images_dicts.items():
-                for image_name, image_data in image_dict.items():
-                    data = image_data.detach().cpu()
-                    filename = f"{image_name}_{image_idx:04}"
-                    if "rgb" in image_name or "blur" == image_name or "gt" == image_name:
-                        path = str((image_dir / f"{filename}.png").resolve())
-                        cv2.imwrite(path, cv2.cvtColor(to8b(data).numpy(), cv2.COLOR_RGB2BGR))
-                    else:
-                        path = str((image_dir / f"{filename}.exr").resolve())
-                        cv2.imwrite(path, data.numpy())

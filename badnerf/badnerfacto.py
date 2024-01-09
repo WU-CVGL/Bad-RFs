@@ -4,14 +4,16 @@ Implementation of BAD-NeRF based on nerfacto.
 
 from __future__ import annotations
 
+from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Dict, Tuple, Type
+from typing import Dict, List, Optional, Tuple, Type, Union
 
 import torch
 from torch import Tensor
 
+from nerfstudio.cameras.cameras import Cameras
 from nerfstudio.cameras.rays import RayBundle
-from nerfstudio.cameras.rays import RaySamples
+from nerfstudio.data.scene_box import OrientedBox
 from nerfstudio.field_components.field_heads import FieldHeadNames
 from nerfstudio.model_components.losses import (
     orientation_loss,
@@ -21,7 +23,11 @@ from nerfstudio.model_components.losses import (
 from nerfstudio.models.nerfacto import NerfactoModel, NerfactoModelConfig
 from nerfstudio.utils import colormaps
 
-from badnerf.badnerf_camera_optimizer import BadNerfCameraOptimizer, BadNerfCameraOptimizerConfig
+from badnerf.badnerf_camera_optimizer import (
+    BadNerfCameraOptimizer,
+    BadNerfCameraOptimizerConfig,
+    TrajSamplingMode,
+)
 
 
 @dataclass
@@ -33,7 +39,7 @@ class BadNerfactoModelConfig(NerfactoModelConfig):
     )
     """The target class to be instantiated."""
 
-    camera_optimizer: BadNerfCameraOptimizerConfig = BadNerfCameraOptimizerConfig()
+    camera_optimizer: BadNerfCameraOptimizerConfig = field(default_factory=lambda: BadNerfCameraOptimizerConfig())
     """Config of the camera optimizer to use"""
 
 
@@ -50,11 +56,22 @@ class BadNerfactoModel(NerfactoModel):
     def __init__(self, config: BadNerfactoModelConfig, **kwargs) -> None:
         super().__init__(config=config, **kwargs)
 
-    def get_outputs(self, ray_bundle: RayBundle):
-        is_training = self.training and torch.is_grad_enabled()
+    def forward(
+            self,
+            ray_bundle: RayBundle,
+            mode: TrajSamplingMode = "uniform",
+    ) -> Dict[str, Union[torch.Tensor, List]]:
+        if self.collider is not None:
+            ray_bundle = self.collider(ray_bundle)
+        return self.get_outputs(ray_bundle, mode)
+
+    def get_outputs(
+            self,
+            ray_bundle: RayBundle,
+            mode: TrajSamplingMode = "uniform",
+    ):
         # apply the camera optimizer pose tweaks
-        ray_bundle = self.camera_optimizer.apply_to_raybundle(ray_bundle, is_training)
-        ray_samples: RaySamples
+        ray_bundle = self.camera_optimizer.apply_to_raybundle(ray_bundle, mode)
         ray_samples, weights_list, ray_samples_list = self.proposal_sampler(ray_bundle, density_fns=self.density_fns)
         field_outputs = self.field.forward(ray_samples, compute_normals=self.config.predict_normals)
         if self.config.use_gradient_scaling:
@@ -64,9 +81,9 @@ class BadNerfactoModel(NerfactoModel):
         weights_list.append(weights)
         ray_samples_list.append(ray_samples)
 
-        # synthesize blurry rgb
         rgb = self.renderer_rgb(rgb=field_outputs[FieldHeadNames.RGB], weights=weights)
-        if is_training:
+        if mode == "uniform":
+            # synthesize blurry rgb
             n = self.camera_optimizer.config.num_virtual_views
             s = ray_bundle.origins.shape[0] // n
             rgb = rgb.view(s, n, 3).mean(dim=1)
@@ -89,15 +106,14 @@ class BadNerfactoModel(NerfactoModel):
             outputs["normals"] = self.normals_shader(normals)
             outputs["pred_normals"] = self.normals_shader(pred_normals)
         # These use a lot of GPU memory, so we avoid storing them for eval.
-        if is_training:
+        if self.training:
             outputs["weights_list"] = weights_list
             outputs["ray_samples_list"] = ray_samples_list
 
-        if is_training and self.config.predict_normals:
+        if self.training and self.config.predict_normals:
             outputs["rendered_orientation_loss"] = orientation_loss(
                 weights.detach(), field_outputs[FieldHeadNames.NORMALS], ray_bundle.directions
             )
-
             outputs["rendered_pred_normal_loss"] = pred_normal_loss(
                 weights.detach(),
                 field_outputs[FieldHeadNames.NORMALS].detach(),
@@ -140,14 +156,18 @@ class BadNerfactoModel(NerfactoModel):
         gt = batch["image"][:, :, :3].to(self.device)
         blur = batch["blur"].to(self.device)
         rgb = outputs["rgb"]
-        acc = colormaps.apply_colormap(outputs["accumulation"])
+        if "accumulation" in outputs:
+            accumulation = outputs["accumulation"]
+            acc = colormaps.apply_colormap(outputs["accumulation"])
+            combined_acc = torch.cat([acc], dim=1)
+        else:
+            accumulation = None
+
         depth = colormaps.apply_depth_colormap(
             outputs["depth"],
-            accumulation=outputs["accumulation"],
+            accumulation=accumulation,
         )
-
         combined_rgb = torch.cat([blur, rgb, gt], dim=1)
-        combined_acc = torch.cat([acc], dim=1)
         combined_depth = torch.cat([depth], dim=1)
 
         # Switch images from [H, W, C] to [1, C, H, W] for metrics computations
@@ -160,6 +180,58 @@ class BadNerfactoModel(NerfactoModel):
 
         # all of these metrics will be logged as scalars
         metrics_dict = {"psnr": float(psnr.item()), "ssim": float(ssim), "lpips": float(lpips)}
-        images_dict = {"img": combined_rgb, "accumulation": combined_acc, "depth": combined_depth}
+        images_dict = {"img": combined_rgb, "depth": combined_depth}
+        if "accumulation" in outputs:
+            images_dict["accumulation"] = combined_acc
 
         return metrics_dict, images_dict
+
+    @torch.no_grad()
+    def get_outputs_for_camera(
+            self,
+            camera: Cameras,
+            mode: TrajSamplingMode = "mid",
+            obb_box: Optional[OrientedBox] = None
+    ) -> Dict[str, torch.Tensor]:
+        """Takes in a camera, generates the raybundle, and computes the output of the model."""
+        raybundle = camera.generate_rays(camera_indices=0, keep_shape=True, obb_box=obb_box)
+
+        # fix the camera index for camera optimizer
+        if camera.metadata is not None:
+            raybundle.set_camera_indices(camera.metadata["cam_idx"])
+
+        image_height, image_width = camera[0].height, camera[0].width
+        return self.get_outputs_for_camera_ray_bundle(raybundle, mode, image_height, image_width)
+
+    @torch.no_grad()
+    def get_outputs_for_camera_ray_bundle(
+            self,
+            camera_ray_bundle: RayBundle,
+            mode: TrajSamplingMode = "mid",
+            image_height: int = None,
+            image_width: int = None,
+    ) -> Dict[str, torch.Tensor]:
+        """Takes in camera parameters and computes the output of the model."""
+        input_device = camera_ray_bundle.directions.device
+        num_rays_per_chunk = self.config.eval_num_rays_per_chunk
+        if image_height is None or image_width is None:
+            image_height, image_width = camera_ray_bundle.origins.shape[:2]
+        num_rays = len(camera_ray_bundle)
+        outputs_lists = defaultdict(list)
+        for i in range(0, num_rays, num_rays_per_chunk):
+            start_idx = i
+            end_idx = i + num_rays_per_chunk
+            ray_bundle = camera_ray_bundle.get_row_major_sliced_ray_bundle(start_idx, end_idx)
+            # move the chunk inputs to the model device
+            ray_bundle = ray_bundle.to(self.device)
+            outputs = self.forward(ray_bundle, mode)
+            for output_name, output in outputs.items():  # type: ignore
+                if not isinstance(output, torch.Tensor):
+                    # TODO: handle lists of tensors as well
+                    continue
+                # move the chunk outputs from the model device back to the device of the inputs.
+                outputs_lists[output_name].append(output.to(input_device))
+        outputs = {}
+        for output_name, outputs_list in outputs_lists.items():
+            outputs[output_name] = torch.cat(outputs_list).view(image_height, image_width, -1)  # type: ignore
+        return outputs
