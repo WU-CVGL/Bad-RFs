@@ -53,7 +53,7 @@ class Spline(nn.Module):
     def __len__(self):
         return self.data.shape[0]
 
-    def forward(self, timestamps: Float[Tensor, "batch_size"]) -> Float[LieTensor, "*batch_size 7"]:
+    def forward(self, timestamps: Float[Tensor, "*batch_size"]) -> Float[LieTensor, "*batch_size 7"]:
         """Interpolate the spline at the given timestamps.
 
         Args:
@@ -74,10 +74,10 @@ class Spline(nn.Module):
 
     def get_segment(
             self,
-            timestamps: Float[Tensor, "batch_size"]
+            timestamps: Float[Tensor, "*batch_size"]
     ) -> Tuple[
-        Float[LieTensor, "batch_size self.order 7"],
-        Float[Tensor, "batch_size"]
+        Float[LieTensor, "*batch_size self.order 7"],
+        Float[Tensor, "*batch_size"]
     ]:
         """Get the spline segment and normalized position on segment at the given timestamp.
 

@@ -25,7 +25,7 @@ from badnerf.badnerf_viewer import BadNerfViewer
 class BadNerfTrainerConfig(TrainerConfig):
     """Configuration for BAD-NeRF training"""
     _target: Type = field(default_factory=lambda: BadNerfTrainer)
-    pipeline: BadNerfPipelineConfig = BadNerfPipelineConfig()
+    pipeline: BadNerfPipelineConfig = field(default_factory=BadNerfPipelineConfig)
     """BAD-NeRF pipeline configuration"""
 
 
@@ -53,7 +53,7 @@ class BadNerfTrainer(Trainer):
         Args:
             test_mode: The test mode to use.
         """
-        # Overriding original setup since we want to use our BadNerfViewer
+        # BAD-NeRF: Overriding original setup since we want to use our BadNerfViewer
         self.pipeline = self.config.pipeline.setup(
             device=self.device,
             test_mode=test_mode,
@@ -110,7 +110,7 @@ class BadNerfTrainer(Trainer):
         writer.put_config(name="config", config_dict=dataclasses.asdict(self.config), step=0)
         profiler.setup_profiler(self.config.logging, writer_log_path)
 
-        # disable eval if no eval images
+        # BAD-NeRF: disable eval if no eval images
         if self.pipeline.datamanager.eval_dataset.cameras is None:
             self.config.steps_per_eval_all_images = int(9e9)
             self.config.steps_per_eval_batch = int(9e9)

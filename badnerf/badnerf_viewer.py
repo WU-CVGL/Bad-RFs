@@ -9,7 +9,7 @@ from badnerf.badnerf_camera_optimizer import BadNerfCameraOptimizer
 
 
 class BadNerfViewer(Viewer):
-    # Overriding original update_camera_poses because BadNerfCameraOptimizer returns LieTensor
+    # BAD-NeRF: Overriding original update_camera_poses because BadNerfCameraOptimizer returns LieTensor
     def update_camera_poses(self):
         # TODO this fn accounts for like ~5% of total train time
         # Update the train camera locations based on optimization

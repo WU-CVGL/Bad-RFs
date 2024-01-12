@@ -1,4 +1,5 @@
 """BAD-NeRF pipeline."""
+from __future__ import annotations
 
 import os
 from pathlib import Path
@@ -29,9 +30,9 @@ class BadNerfPipelineConfig(VanillaPipelineConfig):
 
     _target: Type = field(default_factory=lambda: BadNerfPipeline)
     """The target class to be instantiated."""
-    datamanager: BadNerfDataManagerConfig = field(default_factory=lambda: BadNerfDataManagerConfig())
+    datamanager: BadNerfDataManagerConfig = field(default_factory=BadNerfDataManagerConfig)
     """specifies the datamanager config"""
-    model: BadNerfactoModelConfig = field(default_factory=lambda: BadNerfactoModelConfig())
+    model: BadNerfactoModelConfig = field(default_factory=BadNerfactoModelConfig)
     """specifies the model config"""
     eval_render_start_end: bool = False
     """whether to render and save the starting and ending virtual sharp images in eval"""
@@ -88,7 +89,7 @@ class BadNerfPipeline(VanillaPipeline):
                     f"{image_idx:04}_gt": batch["image"][:, :, :3],
                 }
                 for mode in render_list:
-                    outputs = self.model.get_outputs_for_camera(camera, mode)
+                    outputs = self.model.get_outputs_for_camera(camera, mode=mode)
                     for key, value in outputs.items():
                         if "uniform" == mode:
                             filename = f"{image_idx:04}_reblur"

@@ -34,12 +34,10 @@ from badnerf.badnerf_camera_optimizer import (
 class BadNerfactoModelConfig(NerfactoModelConfig):
     """BAD-NeRF-nerfacto Model Config"""
 
-    _target: Type = field(
-        default_factory=lambda: BadNerfactoModel
-    )
+    _target: Type = field(default_factory=lambda: BadNerfactoModel)
     """The target class to be instantiated."""
 
-    camera_optimizer: BadNerfCameraOptimizerConfig = field(default_factory=lambda: BadNerfCameraOptimizerConfig())
+    camera_optimizer: BadNerfCameraOptimizerConfig = field(default_factory=BadNerfCameraOptimizerConfig)
     """Config of the camera optimizer to use"""
 
 
@@ -69,7 +67,15 @@ class BadNerfactoModel(NerfactoModel):
             self,
             ray_bundle: RayBundle,
             mode: TrajSamplingMode = "uniform",
-    ):
+    ) -> Dict[str, Union[torch.Tensor, List]]:
+        """Takes in a Ray Bundle and returns a dictionary of outputs.
+        Args:
+            ray_bundle: Input bundle of rays. This raybundle should have all the
+            needed information to compute the outputs.
+            mode: Trajectory sampling mode for BadNerfCameraOptimizer.
+        Returns:
+            Outputs of model. (ie. rendered colors)
+        """
         # apply the camera optimizer pose tweaks
         ray_bundle = self.camera_optimizer.apply_to_raybundle(ray_bundle, mode)
         ray_samples, weights_list, ray_samples_list = self.proposal_sampler(ray_bundle, density_fns=self.density_fns)
@@ -190,8 +196,8 @@ class BadNerfactoModel(NerfactoModel):
     def get_outputs_for_camera(
             self,
             camera: Cameras,
+            obb_box: Optional[OrientedBox] = None,
             mode: TrajSamplingMode = "mid",
-            obb_box: Optional[OrientedBox] = None
     ) -> Dict[str, torch.Tensor]:
         """Takes in a camera, generates the raybundle, and computes the output of the model."""
         raybundle = camera.generate_rays(camera_indices=0, keep_shape=True, obb_box=obb_box)

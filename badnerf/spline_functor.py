@@ -44,7 +44,7 @@ def linear_interpolation(
     Args:
         ctrl_knots: The control knots.
         u: Normalized positions on the trajectory between two poses. Range: [0, 1].
-        enable_eps: Whether to add a small epsilon to the normalized position to avoid possible numerical issues.
+        enable_eps: Whether to clip the normalized position with a small epsilon to avoid possible numerical issues.
     Returns:
         The interpolated poses.
     """
@@ -59,8 +59,7 @@ def linear_interpolation(
     if u.dim() == 1:
         u = u.tile((*batch_size, 1))  # (*batch_size, interpolations)
     if enable_eps:
-        u[torch.isclose(u, torch.zeros(u.shape, device=u.device), rtol=_EPS)] += _EPS
-        u[torch.isclose(u, torch.ones(u.shape, device=u.device), rtol=_EPS)] -= _EPS
+        u = torch.clip(u, _EPS, 1.0 - _EPS)
 
     t = pp.bvv(1 - u, t_start) + pp.bvv(u, t_end)
 
@@ -82,7 +81,7 @@ def cubic_bspline_interpolation(
     Args:
         ctrl_knots: The control knots.
         u: Normalized positions on the trajectory between two poses. Range: [0, 1].
-        enable_eps: Whether to add a small epsilon to the normalized position to avoid possible numerical issues.
+        enable_eps: Whether to clip the normalized position with a small epsilon to avoid possible numerical issues.
     Returns:
         The interpolated poses.
     """
@@ -93,8 +92,8 @@ def cubic_bspline_interpolation(
     if u.dim() == 1:
         u = u.tile((*batch_size, 1))  # (*batch_size, interpolations)
     if enable_eps:
-        u[torch.isclose(u, torch.zeros(u.shape, device=u.device), rtol=_EPS)] += _EPS
-        u[torch.isclose(u, torch.ones(u.shape, device=u.device), rtol=_EPS)] -= _EPS
+        u = torch.clip(u, _EPS, 1.0 - _EPS)
+
     uu = u * u
     uuu = uu * u
     oos = 1.0 / 6.0  # one over six
@@ -107,6 +106,7 @@ def cubic_bspline_interpolation(
         oos * uuu
     ], dim=-2)
 
+    # spline t
     t_t = torch.sum(pp.bvv(coeffs_t, ctrl_knots.translation()), dim=-3)
 
     # q coefficients

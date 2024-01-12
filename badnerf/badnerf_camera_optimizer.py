@@ -98,7 +98,7 @@ class BadNerfCameraOptimizer(CameraOptimizer):
         self,
         indices: Int[Tensor, "camera_indices"],
         mode: TrajSamplingMode = "mid",
-    ) -> Float[Tensor, "camera_indices self.num_control_knots self.dof"]:
+    ) -> Float[LieTensor, "camera_indices self.num_control_knots self.dof"]:
         """Indexing into camera adjustments.
         Args:
             indices: indices of Cameras to optimize.
