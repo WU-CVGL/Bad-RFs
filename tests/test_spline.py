@@ -34,12 +34,12 @@ class TestSpline(unittest.TestCase):
             spline.insert(p2)
             spline.insert(p3)
 
-        pose0 = linear_spline(torch.tensor([0.05]))
-        self.assertTrue(torch.isclose(pose0.translation(), torch.tensor([1.5, 1.5, 1.5]), atol=1e-3).all())
-        pose1 = cubic_spline(torch.tensor([0.05]))
-        self.assertTrue(torch.isclose(pose1.translation(), torch.tensor([2.5, 2.5, 2.5]), atol=1e-3).all())
-        pose2 = linear_spline(torch.tensor([0.15]))
-        self.assertTrue(torch.isclose(pose1.translation(), pose2.translation(), atol=1e-9).all())
+        pose0 = linear_spline(torch.tensor([0.15001]))
+        print(f"linear: {pose0.translation()}")
+        self.assertTrue(torch.isclose(pose0.translation(), torch.tensor([2.5001, 2.5001, 2.5001]), atol=1e-3).all())
+        pose1 = cubic_spline(torch.tensor([0.15001]))
+        print(f"cubic: {pose1.translation()}")
+        self.assertTrue(torch.isclose(pose1.translation(), torch.tensor([2.5001, 2.5001, 2.5001]), atol=1e-3).all())
 
     def test_spline_tum(self):
         timestamps, tum_trajectory = TrajectoryIO.load_tum_trajectory(Path("data/traj.txt"))
@@ -65,8 +65,8 @@ class TestSpline(unittest.TestCase):
         self.assertTrue(torch.isclose(poses0[0], tum_trajectory[20], atol=1e-3).all())
         self.assertTrue(torch.isclose(poses0[1], tum_trajectory[30], atol=1e-3).all())
         poses1 = cubic_spline(torch.tensor([4091.0, 4091.1]))
-        self.assertTrue(torch.isclose(poses1[0], tum_trajectory[21], atol=1e-3).all())
-        self.assertTrue(torch.isclose(poses1[1], tum_trajectory[31], atol=1e-3).all())
+        self.assertTrue(torch.isclose(poses1[0], tum_trajectory[20], atol=1e-3).all())
+        self.assertTrue(torch.isclose(poses1[1], tum_trajectory[30], atol=1e-3).all())
 
 
 if __name__ == "__main__":

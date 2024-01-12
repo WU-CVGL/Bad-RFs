@@ -42,15 +42,19 @@ class Spline(nn.Module):
     config: SplineConfig
     data: Float[LieTensor, "num_knots 7"]
     start_time: float
+    end_time: float
+    t_lower_bound: float
+    t_upper_bound: float
 
     def __init__(self, config: SplineConfig):
         super().__init__()
         self.config = config
         self.data = pp.identity_SE3(0)
-        self.start_time = config.start_time
-        assert self.config.degree in [1, 3]
         self.order = self.config.degree + 1
         """Order of the spline, i.e. control knots per segment, 2 for linear, 4 for cubic"""
+
+        self.set_start_time(config.start_time)
+        self.update_end_time()
 
     def __len__(self):
         return self.data.shape[0]
@@ -59,7 +63,7 @@ class Spline(nn.Module):
         """Interpolate the spline at the given timestamps.
 
         Args:
-            timestamps: Timestamps to interpolate the spline at. Range: [start_time, end_time].
+            timestamps: Timestamps to interpolate the spline at. Range: [t_lower_bound, t_upper_bound].
 
         Returns:
             poses: The interpolated pose.
@@ -90,11 +94,15 @@ class Spline(nn.Module):
             segment: The spline segment.
             u: The normalized position on the segment.
         """
+        assert torch.all(timestamps >= self.t_lower_bound)
+        assert torch.all(timestamps <= self.t_upper_bound)
         batch_size = timestamps.shape
         relative_time = timestamps - self.start_time
         normalized_time = relative_time / self.config.sampling_interval
         start_index = torch.floor(normalized_time).int()
         u = normalized_time - start_index
+        if self.config.degree == 3:
+            start_index -= 1
 
         indices = (start_index.tile((self.order, 1)).T +
                    torch.arange(self.order).tile((*batch_size, 1)).to(start_index.device))
@@ -106,11 +114,28 @@ class Spline(nn.Module):
     def insert(self, pose: Float[LieTensor, "1 7"]):
         """Insert a control knot"""
         self.data = pp.SE3(torch.cat([self.data, pose]))
-
-    def set_start_time(self, start_time: float):
-        """Set the starting timestamp of the spline."""
-        self.start_time = start_time
+        self.update_end_time()
 
     def set_data(self, data: Float[LieTensor, "num_knots 7"] | pp.Parameter):
         """Set the spline data."""
         self.data = data
+        self.update_end_time()
+
+    def set_start_time(self, start_time: float):
+        """Set the starting timestamp of the spline."""
+        self.start_time = start_time
+        if self.config.degree == 1:
+            self.t_lower_bound = self.start_time
+        elif self.config.degree == 3:
+            self.t_lower_bound = self.start_time + self.config.sampling_interval
+        else:
+            assert_never(self.config.degree)
+
+    def update_end_time(self):
+        self.end_time = self.start_time + self.config.sampling_interval * (len(self.data) - 1)
+        if self.config.degree == 1:
+            self.t_upper_bound = self.end_time
+        elif self.config.degree == 3:
+            self.t_upper_bound = self.end_time - self.config.sampling_interval
+        else:
+            assert_never(self.config.degree)
