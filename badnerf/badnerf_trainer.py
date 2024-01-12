@@ -5,11 +5,11 @@ from __future__ import annotations
 
 import dataclasses
 import functools
+from dataclasses import dataclass, field
 from typing import Literal, Type
 from typing_extensions import assert_never
 
 import torch
-from dataclasses import dataclass, field
 from nerfstudio.engine.callbacks import TrainingCallbackAttributes
 from nerfstudio.engine.trainer import Trainer, TrainerConfig
 from nerfstudio.utils import profiler, writer

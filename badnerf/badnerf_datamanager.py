@@ -24,6 +24,7 @@ class BadNerfDataManagerConfig(VanillaDataManagerConfig):
 
 class BadNerfDataManager(VanillaDataManager):  # pylint: disable=abstract-method
     """Data manager implementation for BAD-NeRF
+
     Args:
         config: the DataManagerConfig used to instantiate class
     """

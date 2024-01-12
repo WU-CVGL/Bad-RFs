@@ -15,9 +15,11 @@ _EPS = 1e-6
 def linear_interpolation_mid(
         ctrl_knots: Float[LieTensor, "*batch_size 2 7"],
 ) -> Float[LieTensor, "*batch_size 7"]:
-    """Get the midpoint between two SE(3) poses by linear interpolation.
+    """Get the midpoint between batches of two SE(3) poses by linear interpolation.
+
     Args:
         ctrl_knots: The control knots.
+
     Returns:
         The midpoint poses.
     """
@@ -40,11 +42,13 @@ def linear_interpolation(
         u: Float[Tensor, "interpolations"] | Float[Tensor, "*batch_size interpolations"],
         enable_eps: bool = False,
 ) -> Float[LieTensor, "*batch_size interpolations 7"]:
-    """Linear interpolation between two SE(3) poses.
+    """Linear interpolation between batches of two SE(3) poses.
+
     Args:
         ctrl_knots: The control knots.
-        u: Normalized positions on the trajectory between two poses. Range: [0, 1].
+        u: Normalized positions between two SE(3) poses. Range: [0, 1].
         enable_eps: Whether to clip the normalized position with a small epsilon to avoid possible numerical issues.
+
     Returns:
         The interpolated poses.
     """
@@ -55,7 +59,8 @@ def linear_interpolation(
     t_start, q_start = start_pose.translation(), start_pose.rotation()
     t_end, q_end = end_pose.translation(), end_pose.rotation()
 
-    # broadcast u to all batches by default
+    # If u only has one dim, broadcast it to all batches. This means same interpolations for all batches.
+    # Otherwise, u should have the same batch size as the control knots (*batch_size, interpolations).
     if u.dim() == 1:
         u = u.tile((*batch_size, 1))  # (*batch_size, interpolations)
     if enable_eps:
@@ -77,18 +82,21 @@ def cubic_bspline_interpolation(
         u: Float[Tensor, "interpolations"] | Float[Tensor, "*batch_size interpolations"],
         enable_eps: bool = False,
 ) -> Float[LieTensor, "*batch_size interpolations 7"]:
-    """Cubic B-spline interpolation with four SE(3) control knots.
+    """Cubic B-spline interpolation with batches of four SE(3) control knots.
+
     Args:
         ctrl_knots: The control knots.
-        u: Normalized positions on the trajectory between two poses. Range: [0, 1].
+        u: Normalized positions on the trajectory segments. Range: [0, 1].
         enable_eps: Whether to clip the normalized position with a small epsilon to avoid possible numerical issues.
+
     Returns:
         The interpolated poses.
     """
     batch_size = ctrl_knots.shape[:-2]
     interpolations = u.shape[-1]
 
-    # broadcast u to all batches by default
+    # If u only has one dim, broadcast it to all batches. This means same interpolations for all batches.
+    # Otherwise, u should have the same batch size as the control knots (*batch_size, interpolations).
     if u.dim() == 1:
         u = u.tile((*batch_size, 1))  # (*batch_size, interpolations)
     if enable_eps:

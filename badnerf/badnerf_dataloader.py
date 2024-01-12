@@ -14,6 +14,7 @@ from nerfstudio.utils.misc import get_dict_to_torch
 
 class BADNeRFRandIndicesEvalDataloader(RandIndicesEvalDataloader):
     """eval_dataloader that returns random images.
+
     Args:
         input_dataset: sharp GT image
         blurry_dataset: corresponding blurry input image

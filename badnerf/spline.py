@@ -1,12 +1,13 @@
 """
 SE(3) B-spline trajectory
 """
+from __future__ import annotations
 
+from dataclasses import dataclass, field
 from typing import Tuple, Type
 
 import pypose as pp
 import torch
-from dataclasses import dataclass, field
 from jaxtyping import Float
 from pypose import LieTensor
 from torch import nn, Tensor
@@ -20,6 +21,7 @@ from badnerf.spline_functor import linear_interpolation, cubic_bspline_interpola
 @dataclass
 class SplineConfig(InstantiateConfig):
     """Configuration for spline instantiation."""
+
     _target: Type = field(default_factory=lambda: Spline)
     """Target class to instantiate."""
     degree: int = 1
@@ -88,19 +90,27 @@ class Spline(nn.Module):
             segment: The spline segment.
             u: The normalized position on the segment.
         """
-        batch_size = timestamps.shape[0]
+        batch_size = timestamps.shape
         relative_time = timestamps - self.start_time
         normalized_time = relative_time / self.config.sampling_interval
         start_index = torch.floor(normalized_time).int()
         u = normalized_time - start_index
 
         indices = (start_index.tile((self.order, 1)).T +
-                   torch.arange(self.order).tile((batch_size, 1)).to(start_index.device))
+                   torch.arange(self.order).tile((*batch_size, 1)).to(start_index.device))
         indices = indices[..., None].tile(7)
-        segment = pp.SE3(torch.gather(self.data.expand(batch_size, -1, -1), 1, indices))
+        segment = pp.SE3(torch.gather(self.data.expand(*batch_size, -1, -1), 1, indices))
 
         return segment, u
 
     def insert(self, pose: Float[LieTensor, "1 7"]):
         """Insert a control knot"""
         self.data = pp.SE3(torch.cat([self.data, pose]))
+
+    def set_start_time(self, start_time: float):
+        """Set the starting timestamp of the spline."""
+        self.start_time = start_time
+
+    def set_data(self, data: Float[LieTensor, "num_knots 7"] | pp.Parameter):
+        """Set the spline data."""
+        self.data = data

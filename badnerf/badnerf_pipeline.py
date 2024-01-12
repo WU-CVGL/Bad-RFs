@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass, field
 from pathlib import Path
 from time import time
 from typing import Optional, Type
 
 import torch
-from dataclasses import dataclass, field
 from rich.progress import BarColumn, MofNCompleteColumn, Progress, TextColumn, TimeElapsedColumn
 
 from nerfstudio.data.datamanagers.base_datamanager import VanillaDataManager
@@ -54,7 +54,9 @@ class BadNerfPipeline(VanillaPipeline):
             self, step: Optional[int] = None, output_path: Optional[Path] = None, get_std: bool = False
     ):
         """Iterate over all the images in the eval dataset and get the average.
+
         Also saves the rendered images to disk if output_path is provided.
+
         Args:
             step: current training step
             output_path: optional path to save rendered images to
