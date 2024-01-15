@@ -1,5 +1,7 @@
 """
 SE(3) B-spline trajectory
+
+Created by lzzhao on 2023.09.29
 """
 from __future__ import annotations
 
@@ -132,7 +134,7 @@ class Spline(nn.Module):
             assert_never(self.config.degree)
 
     def update_end_time(self):
-        self.end_time = self.start_time + self.config.sampling_interval * (len(self.data) - 1)
+        self.end_time = self.start_time + self.config.sampling_interval * (len(self) - 1)
         if self.config.degree == 1:
             self.t_upper_bound = self.end_time
         elif self.config.degree == 3:

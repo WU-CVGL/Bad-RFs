@@ -1,5 +1,7 @@
 """
 SE(3) B-spline trajectory library
+
+Created by lzzhao on 2023.09.19
 """
 from __future__ import annotations
 
