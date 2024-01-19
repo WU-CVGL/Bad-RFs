@@ -74,13 +74,17 @@ How to convert a deblur-nerf dataset for this dataparser:
 ### 3. Training
 
 ```bash
-ns-train bad-nerfacto --experiment_name tanabata --data data/bad-nerf/blurtanabata --vis viewer+tensorboard
+ns-train bad-nerfacto --data data/bad-nerf/blurtanabata --vis viewer+tensorboard
 ```
 
 ### 4. Render videos
 
 ```bash
-ns-render interpolate --load-config outputs/tanabata/bad-nerfacto/<your_experiment_date_time>/config.yml --render-nearest-camera True --order-poses True --output-path renders/<your_filename>.mp4
+ns-render interpolate \
+  --load-config outputs/tanabata/bad-nerfacto/<your_experiment_date_time>/config.yml \
+  --render-nearest-camera True \
+  --order-poses True \
+  --output-path renders/<your_filename>.mp4
 ```
 
 ### 5. Debug with your IDE

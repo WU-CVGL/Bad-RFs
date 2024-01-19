@@ -7,11 +7,20 @@ dependencies=[
     "pypose"
 ]
 
+# black
+[tool.black]
+line-length = 120
+
+# pylint
+[tool.pylint.messages_control]
+max-line-length = 120
+generated-members = ["numpy.*", "torch.*", "cv2.*", "cv.*"]
+
 [tool.setuptools.packages.find]
-include = ["badnerf*"]
+include = ["badnerf"]
 
 [project.entry-points.'nerfstudio.dataparser_configs']
-badnerf-data = 'badnerf.badnerf_dataparser_config:BadNerfDataparser'
+badnerf-data = 'badnerf.badnerf_config_dataparser:BadNerfDataparser'
 
 [project.entry-points.'nerfstudio.method_configs']
-badnerf_nerfacto = 'badnerf.badnerf_method_config:badnerf_nerfacto'
+badnerf_nerfacto = 'badnerf.badnerf_config_method:badnerf_nerfacto'

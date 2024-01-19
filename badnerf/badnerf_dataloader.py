@@ -14,6 +14,7 @@ from nerfstudio.utils.misc import get_dict_to_torch
 
 class BADNeRFRandIndicesEvalDataloader(RandIndicesEvalDataloader):
     """eval_dataloader that returns random images.
+
     Args:
         input_dataset: sharp GT image
         blurry_dataset: corresponding blurry input image
@@ -42,6 +43,9 @@ class BADNeRFRandIndicesEvalDataloader(RandIndicesEvalDataloader):
         batch = get_dict_to_torch(batch, device=self.device, exclude=["image"])
         batch["blur"] = self.blurry_dataset[image_idx]["image"]
         assert isinstance(batch, dict)
+        if camera.metadata is None:
+            camera.metadata = {}
+        camera.metadata["cam_idx"] = image_idx
         return camera, batch
 
 
@@ -78,4 +82,7 @@ class BADNeRFFixedIndicesEvalDataloader(FixedIndicesEvalDataloader):
         batch = get_dict_to_torch(batch, device=self.device, exclude=["image"])
         batch["blur"] = self.blurry_dataset[image_idx]["image"]
         assert isinstance(batch, dict)
+        if camera.metadata is None:
+            camera.metadata = {}
+        camera.metadata["cam_idx"] = image_idx
         return camera, batch

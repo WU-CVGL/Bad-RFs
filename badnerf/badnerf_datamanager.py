@@ -10,7 +10,7 @@ from nerfstudio.data.datamanagers.base_datamanager import VanillaDataManager, Va
 from nerfstudio.data.utils.dataloaders import CacheDataloader
 from nerfstudio.model_components.ray_generators import RayGenerator
 
-from badnerf.data.badnerf_dataloader import BADNeRFFixedIndicesEvalDataloader, BADNeRFRandIndicesEvalDataloader
+from badnerf.badnerf_dataloader import BADNeRFFixedIndicesEvalDataloader, BADNeRFRandIndicesEvalDataloader
 
 CONSOLE = Console(width=120)
 
@@ -24,6 +24,7 @@ class BadNerfDataManagerConfig(VanillaDataManagerConfig):
 
 class BadNerfDataManager(VanillaDataManager):  # pylint: disable=abstract-method
     """Data manager implementation for BAD-NeRF
+
     Args:
         config: the DataManagerConfig used to instantiate class
     """

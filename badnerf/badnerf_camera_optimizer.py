@@ -5,33 +5,47 @@ Pose and Intrinsics Optimizers
 from __future__ import annotations
 
 import functools
-from typing import Literal, Optional, Tuple, Type, Union
+from typing import Literal, Optional, Type, Union
 
 import pypose as pp
 import torch
 from dataclasses import dataclass, field
 from jaxtyping import Float, Int
 from pypose import LieTensor
-from torch import Tensor, nn
+from torch import Tensor
 from typing_extensions import assert_never
 
 from nerfstudio.cameras.rays import RayBundle
-from nerfstudio.configs.base_config import InstantiateConfig
+from nerfstudio.cameras.camera_optimizers import CameraOptimizer, CameraOptimizerConfig
 
-from badnerf.cameras.spline import linear_interpolation, linear_interpolation_mid
+from badnerf.spline_functor import (
+    cubic_bspline_interpolation,
+    linear_interpolation,
+    linear_interpolation_mid,
+)
+
+
+TrajSamplingMode = Literal["uniform", "start", "mid", "end"]
+"""How to sample the camera trajectory of blur images"""
 
 
 @dataclass
-class BadNerfCameraOptimizerConfig(InstantiateConfig):
+class BadNerfCameraOptimizerConfig(CameraOptimizerConfig):
     """Configuration of BAD-NeRF camera optimizer."""
 
     _target: Type = field(default_factory=lambda: BadNerfCameraOptimizer)
     """The target class to be instantiated."""
 
-    mode: Literal["off", "linear", "bspline"] = "off"
+    mode: Literal["off", "linear", "cubic"] = "off"
     """Pose optimization strategy to use.
     linear: linear interpolation on SE(3);
-    bspline: cubic b-spline interpolation on SE(3)."""
+    cubic: cubic b-spline interpolation on SE(3)."""
+
+    trans_l2_penalty: float = 0.0
+    """L2 penalty on translation parameters."""
+
+    rot_l2_penalty: float = 0.0
+    """L2 penalty on rotation parameters."""
 
     num_virtual_views: int = 10
     """The number of samples used to model the motion-blurring."""
@@ -40,7 +54,7 @@ class BadNerfCameraOptimizerConfig(InstantiateConfig):
     """Initial perturbation to pose delta on se(3). Must be non-zero to prevent NaNs."""
 
 
-class BadNerfCameraOptimizer(nn.Module):
+class BadNerfCameraOptimizer(CameraOptimizer):
     """Optimization for BAD-NeRF virtual camera trajectories."""
     config: BadNerfCameraOptimizerConfig
 
@@ -52,12 +66,16 @@ class BadNerfCameraOptimizer(nn.Module):
         non_trainable_camera_indices: Optional[Int[Tensor, "num_non_trainable_cameras"]] = None,
         **kwargs,
     ) -> None:
-        super().__init__()
+        super().__init__(CameraOptimizerConfig(), num_cameras, device)
         self.config = config
         self.num_cameras = num_cameras
         self.device = device
         self.non_trainable_camera_indices = non_trainable_camera_indices
         self.dof = 6
+        """Degrees of freedom of manifold, i.e. number of dimensions of the tangent space"""
+        self.dim = 7
+        """Dimentions of pose parameterization. Three for translation, 4-tuple for quaternion"""
+
         # Initialize learnable parameters.
         if self.config.mode == "off":
             pass
@@ -79,10 +97,12 @@ class BadNerfCameraOptimizer(nn.Module):
     def forward(
         self,
         indices: Int[Tensor, "camera_indices"],
-    ) -> Float[Tensor, "camera_indices self.num_control_knots self.dof"]:
+        mode: TrajSamplingMode = "mid",
+    ) -> Float[LieTensor, "camera_indices self.num_control_knots self.dof"]:
         """Indexing into camera adjustments.
         Args:
             indices: indices of Cameras to optimize.
+            mode: interpolate between start and end, or return start / mid / end.
         Returns:
             Transformation matrices from optimized camera coordinates
             to given camera coordinates.
@@ -93,7 +113,10 @@ class BadNerfCameraOptimizer(nn.Module):
         if self.config.mode == "off":
             pass
         else:
-            outputs.append(self.pose_adjustment.Exp()[indices.int(), :])
+            indices = indices.int()
+            unique_indices, lut = torch.unique(indices, return_inverse=True)
+            camera_opt = self.pose_adjustment[unique_indices].Exp()
+            outputs.append(self._interpolate(camera_opt, mode)[lut])
 
         # Detach non-trainable indices by setting to identity transform
         if (
@@ -108,52 +131,68 @@ class BadNerfCameraOptimizer(nn.Module):
 
         # Return: identity if no transforms are needed, otherwise composite transforms together.
         if len(outputs) == 0:
-            if self.config.mode == "linear":
-                return pp.identity_SE3(
-                    *(indices.shape[0], self.num_control_knots),
-                    device=self.pose_adjustment.device
-                )
-            else:
-                assert_never(self.config.mode)
+            return pp.identity_SE3(
+                *(indices.shape[0], self.num_control_knots),
+                device=self.pose_adjustment.device
+            )
         return functools.reduce(pp.mul, outputs)
 
-    def spline_interpolation_bundle(
-            self, camera_indices: Int[Tensor, "num_rays"]
-    ) -> Tuple[
-        Float[LieTensor, "num_rays num_virtual_views 4"],
-        Float[Tensor, "num_rays num_virtual_views 3"]
-    ]:
-        """
-        Interpolate camera poses for each ray in the bundle.
-        """
-        camera_opt = self(camera_indices)
-        camera_opt_to_camera_start = camera_opt[:, 0, :]
-        camera_opt_to_camera_end = camera_opt[:, 1, :]
-        q, t = linear_interpolation(
-            camera_opt_to_camera_start,
-            camera_opt_to_camera_end,
-            torch.linspace(0, 1, self.config.num_virtual_views, device=camera_opt_to_camera_start.device)
-        )
-        return q, t
+    def _interpolate(
+            self,
+            camera_opt: Float[LieTensor, "*batch_size self.num_control_knots self.dof"],
+            mode: TrajSamplingMode
+    ) -> Float[Tensor, "*batch_size interpolations self.dof"]:
+        if mode == "uniform":
+            u = torch.linspace(
+                start=0,
+                end=1,
+                steps=self.config.num_virtual_views,
+                device=camera_opt.device,
+            )
+            if self.config.mode == "linear":
+                return linear_interpolation(camera_opt, u)
+            elif self.config.mode == "cubic":
+                return cubic_bspline_interpolation(camera_opt, u)
+            else:
+                assert_never(self.config.mode)
+        elif mode == "mid":
+            if self.config.mode == "linear":
+                return linear_interpolation_mid(camera_opt)
+            elif self.config.mode == "cubic":
+                return cubic_bspline_interpolation(
+                    camera_opt,
+                    torch.tensor([0.5], device=camera_opt.device)
+                ).squeeze()
+            else:
+                assert_never(self.config.mode)
+        elif mode == "start":
+            if self.config.mode == "linear":
+                return camera_opt[..., 0, :]
+            elif self.config.mode == "cubic":
+                return cubic_bspline_interpolation(
+                    camera_opt,
+                    torch.tensor([0.0], device=camera_opt.device)
+                ).squeeze()
+            else:
+                assert_never(self.config.mode)
+        elif mode == "end":
+            if self.config.mode == "linear":
+                return camera_opt[..., 1, :]
+            elif self.config.mode == "cubic":
+                return cubic_bspline_interpolation(
+                    camera_opt,
+                    torch.tensor([1.0], device=camera_opt.device)
+                ).squeeze()
+            else:
+                assert_never(self.config.mode)
+        else:
+            assert_never(mode)
 
-    def spline_interpolation_mid(
-            self, camera_indices: Int[Tensor, "num_rays"]
-    ) -> Tuple[
-        Float[LieTensor, "num_rays 4"],
-        Float[Tensor, "num_rays 3"]
-    ]:
-        """
-        Get median camera poses for each ray in the bundle.
-        """
-        camera_opt = self(camera_indices)
-        camera_opt_to_camera_start = camera_opt[:, 0, :]
-        camera_opt_to_camera_end = camera_opt[:, 1, :]
-        q, t = linear_interpolation_mid(
-            camera_opt_to_camera_start, camera_opt_to_camera_end
-        )
-        return q, t
-
-    def apply_to_raybundle(self, ray_bundle: RayBundle, training: bool) -> RayBundle:
+    def apply_to_raybundle(
+            self,
+            ray_bundle: RayBundle,
+            mode: TrajSamplingMode,
+    ) -> RayBundle:
         """Apply the pose correction to the raybundle"""
         assert ray_bundle.camera_indices is not None
         assert self.pose_adjustment.device == ray_bundle.origins.device
@@ -168,24 +207,22 @@ class BadNerfCameraOptimizer(nn.Module):
         camera_ids = ray_bundle.camera_indices.squeeze()
         if camera_ids.dim() == 0:
             camera_ids = camera_ids[None]
-        if self.config.mode == "linear":
-            if training:
-                q, t = self.spline_interpolation_bundle(camera_ids)
-                q = torch.flatten(q, start_dim=0, end_dim=1)
-                t = torch.flatten(t, start_dim=0, end_dim=1)
-                ray_bundle = ray_bundle._apply_fn_to_fields(repeat_fn)
-            else:
-                q, t = self.spline_interpolation_mid(camera_ids)
 
-            ray_bundle.origins = ray_bundle.origins + t
-            ray_bundle.directions = pp.SO3(q) @ ray_bundle.directions
-            return ray_bundle
-        else:
-            assert_never(self.config.mode)
+        poses_delta = self(camera_ids, mode)
 
-    def get_loss_dict(self, loss_dict: dict) -> None:
-        """Add regularization"""
-        pass
+        if mode == "uniform":
+            if ray_bundle.ndim == 2:
+                ray_bundle = ray_bundle._apply_fn_to_fields(lambda x: x.flatten(start_dim=0, end_dim=1))
+                poses_delta = pp.SE3(torch.flatten(poses_delta, start_dim=0, end_dim=1))
+            poses_delta = pp.SE3(torch.flatten(poses_delta, start_dim=0, end_dim=1))
+            ray_bundle = ray_bundle._apply_fn_to_fields(repeat_fn)
+
+        t = poses_delta.translation()
+        q = poses_delta.rotation()
+        ray_bundle.origins = ray_bundle.origins + t
+        ray_bundle.directions = pp.SO3(q) @ ray_bundle.directions
+
+        return ray_bundle
 
     def get_metrics_dict(self, metrics_dict: dict) -> None:
         """Get camera optimizer metrics"""
@@ -199,16 +236,3 @@ class BadNerfCameraOptimizer(nn.Module):
             for i in range(self.num_control_knots):
                 metrics_dict["camera_opt_translation"] += self.pose_adjustment[:, i, :3].norm()
                 metrics_dict["camera_opt_rotation"] += self.pose_adjustment[:, i, 3:].norm()
-
-    def get_correction_matrices(self):
-        """Get optimized pose correction matrices"""
-        return self(torch.arange(0, self.num_cameras).long())
-
-    def get_param_groups(self, param_groups: dict) -> None:
-        """Get camera optimizer parameters"""
-        camera_opt_params = list(self.parameters())
-        if self.config.mode != "off":
-            assert len(camera_opt_params) > 0
-            param_groups["camera_opt"] = camera_opt_params
-        else:
-            assert len(camera_opt_params) == 0

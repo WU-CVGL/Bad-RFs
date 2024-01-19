@@ -8,8 +8,8 @@ import glob
 import os
 from collections import OrderedDict
 from dataclasses import dataclass, field
-from pathlib import Path, PosixPath
-from typing import List, Optional, Type, Union
+from pathlib import Path
+from typing import List, Optional, Type
 
 import numpy as np
 import torch
