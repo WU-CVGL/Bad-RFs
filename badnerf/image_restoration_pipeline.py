@@ -18,36 +18,41 @@ from nerfstudio.utils import profiler
 from nerfstudio.utils.writer import to8b
 
 from badnerf.badnerfacto import BadNerfactoModel, BadNerfactoModelConfig
-from badnerf.badnerf_datamanager import BadNerfDataManager, BadNerfDataManagerConfig
+from badnerf.image_restoration_datamanager import ImageRestorationDataManager, ImageRestorationDataManagerConfig
 
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
 
 
 @dataclass
-class BadNerfPipelineConfig(VanillaPipelineConfig):
-    """BAD-NeRF pipeline config"""
+class ImageRestorationPipelineConfig(VanillaPipelineConfig):
+    """Image restoration pipeline config"""
 
-    _target: Type = field(default_factory=lambda: BadNerfPipeline)
+    _target: Type = field(default_factory=lambda: ImageRestorationPipeline)
     """The target class to be instantiated."""
-    datamanager: BadNerfDataManagerConfig = field(default_factory=BadNerfDataManagerConfig)
+
+    datamanager: ImageRestorationDataManagerConfig = field(default_factory=ImageRestorationDataManagerConfig)
     """specifies the datamanager config"""
+
     model: BadNerfactoModelConfig = field(default_factory=BadNerfactoModelConfig)
     """specifies the model config"""
+
     eval_render_start_end: bool = False
     """whether to render and save the starting and ending virtual sharp images in eval"""
-    eval_render_reblur: bool = False
-    """whether to render and save the re-blurred images with learned trajectory in eval. Note: Slow & VRAM hungry!
-    Reduce VRAM consumption by passing argument `--pipeline.model.eval_num_rays_per_chunk=16384` or less.
+
+    eval_render_estimated: bool = False
+    """whether to render and save the estimated degraded images with learned trajectory in eval.
+    Note: Slow & VRAM hungry! Reduce VRAM consumption by passing argument
+            `--pipeline.model.eval_num_rays_per_chunk=16384` or less.
     """
 
 
-class BadNerfPipeline(VanillaPipeline):
-    """BAD-NeRF pipeline"""
+class ImageRestorationPipeline(VanillaPipeline):
+    """Image restoration pipeline"""
 
-    config: BadNerfPipelineConfig
+    config: ImageRestorationPipelineConfig
     model: BadNerfactoModel
-    datamanager: BadNerfDataManager
+    datamanager: ImageRestorationDataManager
 
     @profiler.time_function
     def get_average_eval_image_metrics(
@@ -70,7 +75,7 @@ class BadNerfPipeline(VanillaPipeline):
         render_list = ["mid"]
         if self.config.eval_render_start_end:
             render_list += ["start", "end"]
-        if self.config.eval_render_reblur:
+        if self.config.eval_render_estimated:
             render_list += ["uniform"]
         assert isinstance(self.datamanager, (VanillaDataManager, ParallelDataManager, FullImageDatamanager))
         num_images = len(self.datamanager.fixed_indices_eval_dataloader)
@@ -87,14 +92,14 @@ class BadNerfPipeline(VanillaPipeline):
                 inner_start = time()
                 image_idx = batch['image_idx']
                 images_dict = {
-                    f"{image_idx:04}_blur": batch["blur"][:, :, :3],
+                    f"{image_idx:04}_input": batch["degraded"][:, :, :3],
                     f"{image_idx:04}_gt": batch["image"][:, :, :3],
                 }
                 for mode in render_list:
                     outputs = self.model.get_outputs_for_camera(camera, mode=mode)
                     for key, value in outputs.items():
                         if "uniform" == mode:
-                            filename = f"{image_idx:04}_reblur"
+                            filename = f"{image_idx:04}_estimated"
                         else:
                             filename = f"{image_idx:04}_{key}_{mode}"
                         if "rgb" in key:
@@ -109,7 +114,11 @@ class BadNerfPipeline(VanillaPipeline):
                         image_dir.mkdir(parents=True)
                     for filename, data in images_dict.items():
                         data = data.detach().cpu()
-                        if "rgb" in filename or "blur" in filename or "gt" in filename:
+                        is_u8_image = False
+                        for tag in ["rgb", "input", "gt", "estimated", "mask"]:
+                            if tag in filename:
+                                is_u8_image = True
+                        if is_u8_image:
                             path = str((image_dir / f"{filename}.png").resolve())
                             cv2.imwrite(path, cv2.cvtColor(to8b(data).numpy(), cv2.COLOR_RGB2BGR))
                         else:

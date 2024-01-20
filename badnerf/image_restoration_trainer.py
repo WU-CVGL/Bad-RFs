@@ -17,36 +17,25 @@ from nerfstudio.utils.decorators import check_eval_enabled
 from nerfstudio.utils.misc import step_check
 from nerfstudio.utils.writer import EventName, TimeWriter
 
-from badnerf.badnerf_pipeline import BadNerfPipeline, BadNerfPipelineConfig
+from badnerf.image_restoration_pipeline import ImageRestorationPipeline, ImageRestorationPipelineConfig
 from badnerf.badnerf_viewer import BadNerfViewer
 
 
 @dataclass
-class BadNerfTrainerConfig(TrainerConfig):
-    """Configuration for BAD-NeRF training"""
-    _target: Type = field(default_factory=lambda: BadNerfTrainer)
-    pipeline: BadNerfPipelineConfig = field(default_factory=BadNerfPipelineConfig)
-    """BAD-NeRF pipeline configuration"""
+class ImageRestorationTrainerConfig(TrainerConfig):
+    """Configuration for image restoration training"""
+
+    _target: Type = field(default_factory=lambda: ImageRestorationTrainer)
+    """The target class to be instantiated."""
+
+    pipeline: ImageRestorationPipelineConfig = field(default_factory=ImageRestorationPipelineConfig)
+    """Image restoration pipeline configuration"""
 
 
-class BadNerfTrainer(Trainer):
-    """BAD-NeRF Trainer class
-    Args:
-        config: The configuration object.
-        local_rank: Local rank of the process.
-        world_size: World size of the process.
-    Attributes:
-        config: The configuration object.
-        local_rank: Local rank of the process.
-        world_size: World size of the process.
-        device: The device to run the training on.
-        pipeline: The pipeline object.
-        optimizers: The optimizers object.
-        callbacks: The callbacks object.
-        training_state: Current model training state.
-    """
-    config: BadNerfTrainerConfig
-    pipeline: BadNerfPipeline
+class ImageRestorationTrainer(Trainer):
+    """Image restoration Trainer class"""
+    config: ImageRestorationTrainerConfig
+    pipeline: ImageRestorationPipeline
 
     def setup(self, test_mode: Literal["test", "val", "inference"] = "val") -> None:
         """Setup the trainer.
@@ -81,7 +70,7 @@ class BadNerfTrainer(Trainer):
                 train_lock=self.train_lock,
                 share=self.config.viewer.make_share_url,
             )
-            banner_messages = [f"Viewer at: {self.viewer_state.viewer_url}"]
+            banner_messages = self.viewer_state.viewer_info
         self._check_viewer_warnings()
 
         self._load_checkpoint()

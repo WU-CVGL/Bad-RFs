@@ -26,10 +26,13 @@ class SplineConfig(InstantiateConfig):
 
     _target: Type = field(default_factory=lambda: Spline)
     """Target class to instantiate."""
+
     degree: int = 1
     """Degree of the spline. 1 for linear spline, 3 for cubic spline."""
+
     sampling_interval: float = 0.1
     """Sampling interval of the control knots."""
+
     start_time: float = 0.0
     """Starting timestamp of the spline."""
 

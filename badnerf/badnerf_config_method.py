@@ -8,14 +8,14 @@ from nerfstudio.engine.schedulers import ExponentialDecaySchedulerConfig
 from nerfstudio.plugins.types import MethodSpecification
 
 from badnerf.badnerf_camera_optimizer import BadNerfCameraOptimizerConfig
-from badnerf.badnerf_datamanager import BadNerfDataManagerConfig
-from badnerf.badnerf_dataparser import BadNerfDataParserConfig
-from badnerf.badnerf_pipeline import BadNerfPipelineConfig
-from badnerf.badnerf_trainer import BadNerfTrainerConfig
+from badnerf.image_restoration_datamanager import ImageRestorationDataManagerConfig
+from badnerf.image_restoration_dataparser import ImageRestorationDataParserConfig
+from badnerf.image_restoration_pipeline import ImageRestorationPipelineConfig
+from badnerf.image_restoration_trainer import ImageRestorationTrainerConfig
 from badnerf.badnerfacto import BadNerfactoModelConfig
 
 badnerf_nerfacto = MethodSpecification(
-    config=BadNerfTrainerConfig(
+    config=ImageRestorationTrainerConfig(
         method_name="bad-nerfacto",
         steps_per_eval_batch=500,
         steps_per_eval_image=500,
@@ -24,9 +24,9 @@ badnerf_nerfacto = MethodSpecification(
         max_num_iterations=30001,
         mixed_precision=False,
         use_grad_scaler=True,
-        pipeline=BadNerfPipelineConfig(
-            datamanager=BadNerfDataManagerConfig(
-                dataparser=BadNerfDataParserConfig(),
+        pipeline=ImageRestorationPipelineConfig(
+            datamanager=ImageRestorationDataManagerConfig(
+                dataparser=ImageRestorationDataParserConfig(),
                 train_num_rays_per_batch=1024,
                 eval_num_rays_per_batch=1024,
             ),

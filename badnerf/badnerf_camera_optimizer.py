@@ -26,7 +26,7 @@ from badnerf.spline_functor import (
 
 
 TrajSamplingMode = Literal["uniform", "start", "mid", "end"]
-"""How to sample the camera trajectory of blur images"""
+"""How to sample the camera trajectory"""
 
 
 @dataclass
