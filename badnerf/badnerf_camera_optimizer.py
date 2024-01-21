@@ -217,10 +217,8 @@ class BadNerfCameraOptimizer(CameraOptimizer):
             poses_delta = pp.SE3(torch.flatten(poses_delta, start_dim=0, end_dim=1))
             ray_bundle = ray_bundle._apply_fn_to_fields(repeat_fn)
 
-        t = poses_delta.translation()
-        q = poses_delta.rotation()
-        ray_bundle.origins = ray_bundle.origins + t
-        ray_bundle.directions = pp.SO3(q) @ ray_bundle.directions
+        ray_bundle.origins = poses_delta.translation() + ray_bundle.origins
+        ray_bundle.directions = poses_delta.rotation() @ ray_bundle.directions
 
         return ray_bundle
 

@@ -1,4 +1,4 @@
-<h1 align=center> 😈𝘽𝙖𝙙-𝙉𝙚𝙍𝙁𝙨: 𝘽undle-𝙖𝙙justed 𝙉𝙚𝙍𝙁𝙨 from degraded images</h1>
+<h1 align=center> 😈𝘽𝙖𝙙-𝙉𝙚𝙍𝙁𝙨: 𝘽undle-𝙖𝙙justed 𝙉𝙚𝙍𝙁𝙨 from degraded images with continuous-time motion models</h1>
 
 This repo contains an accelerated reimplementation of our CVPR paper [**BAD-NeRF**: Bundle Adjusted Deblur Neural Radiance Fields](https://wangpeng000.github.io/BAD-NeRF/),
 based on the [nerfstudio](https://github.com/nerfstudio-project/nerfstudio) framework.
@@ -128,7 +128,7 @@ If you find this useful, please consider citing:
 
 ```bibtex
 @misc{zhao2023badnerfs,
-    title     = {{Bad-NeRFs: Bundle-adjusted Neural Radiance Fields from Degraded Images}},
+    title     = {{Bad-NeRFs: Bundle-adjusted Neural Radiance Fields from Degraded Images with Continuous-time Motion Models}},
     author    = {Zhao, Lingzhe and Wang, Peng and Liu, Peidong},
     year      = {2023},
     note      = {{https://github.com/WU-CVGL/BAD-NeRFs}}
