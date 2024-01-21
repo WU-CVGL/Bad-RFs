@@ -1,14 +1,14 @@
-# BAD-NeRFstudio: 😈BAD-NeRF Accelerated
+<h1 align=center> 😈𝘽𝙖𝙙-𝙉𝙚𝙍𝙁𝙨: 𝘽undle-𝙖𝙙justed 𝙉𝙚𝙍𝙁𝙨 from degraded images with continuous-time motion models</h1>
 
-[[Project Page]](https://wangpeng000.github.io/BAD-NeRF/) [[Original Code]](https://github.com/WU-CVGL/BAD-NeRF) [[ArXiv]](https://arxiv.org/abs/2211.12853) [[CVPR 2023]](https://openaccess.thecvf.com/content/CVPR2023/html/Wang_BAD-NeRF_Bundle_Adjusted_Deblur_Neural_Radiance_Fields_CVPR_2023_paper.html) [[Youtube]](https://www.youtube.com/watch?v=xoES4eONYoA) [[Bilibili]](https://www.bilibili.com/video/BV1Gz4y1e7oH/)
+This repo contains an accelerated reimplementation of our CVPR paper [**BAD-NeRF**: Bundle Adjusted Deblur Neural Radiance Fields](https://wangpeng000.github.io/BAD-NeRF/),
+based on the [nerfstudio](https://github.com/nerfstudio-project/nerfstudio) framework.
 
-This is an official **[nerfstudio](https://github.com/nerfstudio-project/nerfstudio)**-framework-based implementation of our CVPR2023 paper: *😈BAD-NeRF: Bundle Adjusted Deblur Neural Radiance Fields*. Now you can train a scene from blurry images in minutes!
+In the future, we will continue to explore *bundle-adjusted neural radience fields*, add more accelerated implementations
+to this repo, such as a reimplementation of our ICLR paper [**USB-NeRF**: Unrolling Shutter Bundle Adjusted Neural Radiance Fields](https://arxiv.org/abs/2310.02687).
 
-## Accelerated training:
+## Demo
 
-https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/c98cc480-24bb-47e9-b5b7-3cac75e092f7
-
-## Results on [Deblur-NeRF](https://github.com/limacv/Deblur-NeRF/)'s real-world motion-blurred data:
+Deblurring & novel-view synthesis results on [Deblur-NeRF](https://github.com/limacv/Deblur-NeRF/)'s real-world motion-blurred data:
 
 https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/944a6016-6d6a-4609-b8e3-1e04f768d3dd
 
@@ -27,8 +27,10 @@ https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/f45b7c47-148c-4a63-a99
 
 ### 1. Installation
 
-You may check out the original [`nerfstudio`](https://github.com/nerfstudio-project/nerfstudio) repo
-for prerequisites and dependencies. Our implementation is based on [this PR](https://github.com/nerfstudio-project/nerfstudio/pull/2092), so if you have an older version of nerfstudio installed, please `git clone` the main branch and install the latest version.
+You may check out the original [`nerfstudio`](https://github.com/nerfstudio-project/nerfstudio) repo for prerequisites and dependencies. 
+Currently, our codebase is build on top of the latest version of nerfstudio (v1.0.0),
+so if you have an older version of nerfstudio installed,
+please `git clone` the main branch and install the latest version.
 
 Besides, we use [pypose](https://github.com/pypose/pypose) to implement the pose interpolation. You can install it with:
 
@@ -39,8 +41,8 @@ pip install pypose
 Then you can clone and install this repo as a python package with:
 
 ```bash
-git clone https://github.com/WU-CVGL/BAD-NeRFstudio
-cd BAD-NeRFstudio
+git clone https://github.com/WU-CVGL/Bad-NeRFs
+cd Bad-NeRFs
 pip install -e .
 ```
 
@@ -67,9 +69,13 @@ How to convert a deblur-nerf dataset for this dataparser:
 
 3. The folder `data/bad-nerf/blurtanabata` is ready.
 
-> Note1: If you do not have the testing images, e.g. when training with real-world data (like those in [Deblur-NeRF](https://limacv.github.io/deblurnerf/)), you can skip the step 2.
+> Note1: If you do not have the testing images, e.g. when training with real-world data
+> (like those in [Deblur-NeRF](https://limacv.github.io/deblurnerf/)), you can skip the step 2.
 >
-> Note2: In the BadNerfDataparser, since nerfstudio does not model the NDC scene contraction for LLFF data, we set `scale_factor = 0.25`, which makes nerfacto works well on LLFF datasets. If your data is not captured in a LLFF fashion (i.e. forward-facing), such as object-centric like Mip-NeRF 360, you can set the `scale_factor = 1.`
+> Note2: In the BadNerfDataparser, since nerfstudio does not model the NDC scene contraction for LLFF data,
+> we set `scale_factor = 0.25`, which makes nerfacto works well on LLFF datasets.
+> If your data is not captured in a LLFF fashion (i.e. forward-facing), such as object-centric like Mip-NeRF 360,
+> you can set the `scale_factor = 1.`
 
 ### 3. Training
 
@@ -89,9 +95,12 @@ ns-render interpolate \
 
 ### 5. Debug with your IDE
 
-Open this repo with your IDE, create a configuration, and set the executing python script path to `<nerfstudio_path>/nerfstudio/scripts/train.py`, with the parameters above.
+Open this repo with your IDE, create a configuration, and set the executing python script path to
+`<nerfstudio_path>/nerfstudio/scripts/train.py`, with the parameters above.
 
-## Deblur Performance Reference
+## Evaluation
+
+### Image deblurring
 
 | Model                          | Dataset      | PSNR↑           | SSIM↑             | LPIPS↓            |Train Time (steps@time)|
 |--------------------------------|--------------|-----------------|-------------------|-------------------|-----------------------|
@@ -110,18 +119,19 @@ Open this repo with your IDE, create a configuration, and set the executing pyth
 | BAD-NeRF (paper)               | ArchViz-high | `28.07`         | 0.8234            | 0.2460            | 200k@11h              |
 | `bad-nerfacto`                 | ArchViz-high | 26.22 / 27.32   | 0.8649 / `0.8894` | 0.2504 / `0.2061` | 5k@200s / 30k@18min   |
 
-> Tested with AMD Ryzen 7950X CPU + NVIDIA RTX 4090 GPU, on Manjaro Linux, with CUDA 12.1 and PyTorch 2.0.1. Train speed may vary with different configurations.
+> Tested with AMD Ryzen 7950X CPU + NVIDIA RTX 4090 GPU, on Manjaro Linux, with CUDA 12.1 and PyTorch 2.0.1.
+> Train speed may vary with different configurations.
 
 ## Citation
 
 If you find this useful, please consider citing:
 
 ```bibtex
-@misc{zhao2023badnerfstudio,
-    title     = {{BAD-NeRFstudio: BAD-NeRF Accelerated}},
+@misc{zhao2023badnerfs,
+    title     = {{Bad-NeRFs: Bundle-adjusted Neural Radiance Fields from Degraded Images with Continuous-time Motion Models}},
     author    = {Zhao, Lingzhe and Wang, Peng and Liu, Peidong},
     year      = {2023},
-    note      = {{https://github.com/WU-CVGL/BAD-NeRFstudio}}
+    note      = {{https://github.com/WU-CVGL/BAD-NeRFs}}
 }
 
 @InProceedings{wang2023badnerf,

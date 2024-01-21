@@ -47,20 +47,21 @@ def _find_files(directory: Path, exts: List[str]):
 
 
 @dataclass
-class BadNerfDataParserConfig(NerfstudioDataParserConfig):
+class ImageRestorationDataParserConfig(NerfstudioDataParserConfig):
     """Nerfstudio dataset config"""
 
-    _target: Type = field(default_factory=lambda: BadNerfDataParser)
+    _target: Type = field(default_factory=lambda: ImageRestorationDataParser)
     """target class to instantiate"""
+
     scale_factor: float = 0.25
     """How much to scale the camera origins by."""
 
 
 @dataclass
-class BadNerfDataParser(Nerfstudio):
+class ImageRestorationDataParser(Nerfstudio):
     """Nerfstudio DatasetParser"""
 
-    config: BadNerfDataParserConfig
+    config: ImageRestorationDataParserConfig
     downscale_factor: Optional[int] = None
 
     def _generate_dataparser_outputs(self, split="train"):
@@ -134,6 +135,7 @@ class BadNerfDataParser(Nerfstudio):
             image_filenames.append(fname)
             poses_dict[fname.stem] = np.array(frame["transform_matrix"])
 
+        # BAD-NeRF: in image restoration tasks (deblur), every degraded train image has a corresponding GT test image
         num_images = len(image_filenames)
         image_filenames = sorted(image_filenames)
         if split in ["val", "test"]:

@@ -160,7 +160,7 @@ class BadNerfactoModel(NerfactoModel):
             A dictionary of metrics.
         """
         gt = batch["image"][:, :, :3].to(self.device)
-        blur = batch["blur"].to(self.device)
+        blur = batch["degraded"].to(self.device)
         rgb = outputs["rgb"]
         if "accumulation" in outputs:
             accumulation = outputs["accumulation"]

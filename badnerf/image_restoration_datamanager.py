@@ -9,27 +9,26 @@ from rich.progress import Console
 from nerfstudio.data.datamanagers.base_datamanager import VanillaDataManager, VanillaDataManagerConfig
 from nerfstudio.data.utils.dataloaders import CacheDataloader
 from nerfstudio.model_components.ray_generators import RayGenerator
+from nerfstudio.utils.rich_utils import CONSOLE
 
-from badnerf.badnerf_dataloader import BADNeRFFixedIndicesEvalDataloader, BADNeRFRandIndicesEvalDataloader
-
-CONSOLE = Console(width=120)
+from badnerf.image_restoration_dataloader import ImageRestorationFixedIndicesEvalDataloader, ImageRestorationRandIndicesEvalDataloader
 
 
 @dataclass
-class BadNerfDataManagerConfig(VanillaDataManagerConfig):
+class ImageRestorationDataManagerConfig(VanillaDataManagerConfig):
     """A depth datamanager - required to use with .setup()"""
 
-    _target: Type = field(default_factory=lambda: BadNerfDataManager)
+    _target: Type = field(default_factory=lambda: ImageRestorationDataManager)
 
 
-class BadNerfDataManager(VanillaDataManager):  # pylint: disable=abstract-method
+class ImageRestorationDataManager(VanillaDataManager):  # pylint: disable=abstract-method
     """Data manager implementation for BAD-NeRF
 
     Args:
         config: the DataManagerConfig used to instantiate class
     """
 
-    config: BadNerfDataManagerConfig
+    config: ImageRestorationDataManagerConfig
 
     def setup_eval(self):
         """Sets up the data loader for evaluation"""
@@ -49,15 +48,15 @@ class BadNerfDataManager(VanillaDataManager):  # pylint: disable=abstract-method
         self.eval_pixel_sampler = self._get_pixel_sampler(self.eval_dataset, self.config.eval_num_rays_per_batch)
         self.eval_ray_generator = RayGenerator(self.eval_dataset.cameras.to(self.device))
         # for loading full images
-        self.fixed_indices_eval_dataloader = BADNeRFFixedIndicesEvalDataloader(
+        self.fixed_indices_eval_dataloader = ImageRestorationFixedIndicesEvalDataloader(
             input_dataset=self.eval_dataset,
-            blurry_dataset=self.train_dataset,
+            degraded_dataset=self.train_dataset,
             device=self.device,
             num_workers=self.world_size * 4,
         )
-        self.eval_dataloader = BADNeRFRandIndicesEvalDataloader(
+        self.eval_dataloader = ImageRestorationRandIndicesEvalDataloader(
             input_dataset=self.eval_dataset,
-            blurry_dataset=self.train_dataset,
+            degraded_dataset=self.train_dataset,
             device=self.device,
             num_workers=self.world_size * 4,
         )

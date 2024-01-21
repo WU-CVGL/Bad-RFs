@@ -3,7 +3,7 @@ name = "badnerf"
 version = "1.0.0"
 
 dependencies=[
-    "nerfstudio",
+    "nerfstudio>=1.0.0",
     "pypose"
 ]
 
