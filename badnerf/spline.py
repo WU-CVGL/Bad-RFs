@@ -137,6 +137,7 @@ class Spline(nn.Module):
             assert_never(self.config.degree)
 
     def update_end_time(self):
+        """Update the ending timestamp of the spline."""
         self.end_time = self.start_time + self.config.sampling_interval * (len(self) - 1)
         if self.config.degree == 1:
             self.t_upper_bound = self.end_time

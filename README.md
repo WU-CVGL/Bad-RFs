@@ -28,7 +28,7 @@ https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/f45b7c47-148c-4a63-a99
 ### 1. Installation
 
 You may check out the original [`nerfstudio`](https://github.com/nerfstudio-project/nerfstudio) repo for prerequisites and dependencies. 
-Currently, our codebase is build on top of the latest version of nerfstudio (v1.0.0),
+Currently, our codebase is build on top of the latest version of nerfstudio (v1.0.1),
 so if you have an older version of nerfstudio installed,
 please `git clone` the main branch and install the latest version.
 
