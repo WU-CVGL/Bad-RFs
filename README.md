@@ -3,7 +3,7 @@
 This repo contains an accelerated reimplementation of our CVPR paper [**BAD-NeRF**: Bundle Adjusted Deblur Neural Radiance Fields](https://wangpeng000.github.io/BAD-NeRF/),
 based on the [nerfstudio](https://github.com/nerfstudio-project/nerfstudio) framework.
 
-In the future, we will continue to explore *bundle-adjusted neural radience fields*, add more accelerated implementations
+In the future, we will continue to explore *bundle-adjusted radience fields*, add more accelerated implementations
 to this repo, such as a reimplementation of our ICLR paper [**USB-NeRF**: Unrolling Shutter Bundle Adjusted Neural Radiance Fields](https://arxiv.org/abs/2310.02687).
 
 ## Demo
