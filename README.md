@@ -1,4 +1,4 @@
-<h1 align=center> 😈𝘽𝙖𝙙-𝙉𝙚𝙍𝙁𝙨: 𝘽undle-𝙖𝙙justed 𝙉𝙚𝙍𝙁𝙨 from degraded images with continuous-time motion models</h1>
+<h1 align=center> 😈𝘽𝙖𝙙-𝙍𝙁𝙨: 𝘽undle-𝙖𝙙justed 𝙍adiance 𝙁ield𝙨 from degraded images with continuous-time motion models</h1>
 
 This repo contains an accelerated reimplementation of our CVPR paper [**BAD-NeRF**: Bundle Adjusted Deblur Neural Radiance Fields](https://wangpeng000.github.io/BAD-NeRF/),
 based on the [nerfstudio](https://github.com/nerfstudio-project/nerfstudio) framework.
@@ -41,8 +41,8 @@ pip install pypose
 Then you can clone and install this repo as a python package with:
 
 ```bash
-git clone https://github.com/WU-CVGL/Bad-NeRFs
-cd Bad-NeRFs
+git clone https://github.com/WU-CVGL/Bad-RFs
+cd Bad-RFs
 pip install -e .
 ```
 
@@ -128,10 +128,10 @@ If you find this useful, please consider citing:
 
 ```bibtex
 @misc{zhao2023badnerfs,
-    title     = {{Bad-NeRFs: Bundle-adjusted Neural Radiance Fields from Degraded Images with Continuous-time Motion Models}},
+    title     = {{Bad-RFs: Bundle-adjusted Radiance Fields from Degraded Images with Continuous-time Motion Models}},
     author    = {Zhao, Lingzhe and Wang, Peng and Liu, Peidong},
     year      = {2023},
-    note      = {{https://github.com/WU-CVGL/BAD-NeRFs}}
+    note      = {{https://github.com/WU-CVGL/Bad-RFs}}
 }
 
 @InProceedings{wang2023badnerf,
