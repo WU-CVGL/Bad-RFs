@@ -42,7 +42,7 @@ class BadNerfactoModelConfig(NerfactoModelConfig):
 
 
 class BadNerfactoModel(NerfactoModel):
-    """BAD-NeRF-nerfacto Model model
+    """BAD-NeRF-nerfacto Model
 
     Args:
         config: configuration to instantiate model
@@ -89,7 +89,7 @@ class BadNerfactoModel(NerfactoModel):
 
         rgb = self.renderer_rgb(rgb=field_outputs[FieldHeadNames.RGB], weights=weights)
         if mode == "uniform":
-            # synthesize blurry rgb
+            # BAD-NeRF: synthesize blurry rgb
             n = self.camera_optimizer.config.num_virtual_views
             s = ray_bundle.origins.shape[0] // n
             rgb = rgb.view(s, n, 3).mean(dim=1)
@@ -202,11 +202,11 @@ class BadNerfactoModel(NerfactoModel):
         """Takes in a camera, generates the raybundle, and computes the output of the model."""
         raybundle = camera.generate_rays(camera_indices=0, keep_shape=True, obb_box=obb_box)
 
-        # fix the camera index for camera optimizer
+        # Set camera indices for the camera optimizer to get the correct camera pose adjustments
         if camera.metadata is not None:
             raybundle.set_camera_indices(camera.metadata["cam_idx"])
 
-        image_height, image_width = camera[0].height, camera[0].width
+        image_height, image_width = camera[0].height.item(), camera[0].width.item()
         return self.get_outputs_for_camera_ray_bundle(raybundle, mode, image_height, image_width)
 
     @torch.no_grad()

@@ -162,7 +162,7 @@ class BadNerfCameraOptimizer(CameraOptimizer):
                 return cubic_bspline_interpolation(
                     camera_opt,
                     torch.tensor([0.5], device=camera_opt.device)
-                ).squeeze()
+                ).squeeze(1)
             else:
                 assert_never(self.config.mode)
         elif mode == "start":
@@ -172,7 +172,7 @@ class BadNerfCameraOptimizer(CameraOptimizer):
                 return cubic_bspline_interpolation(
                     camera_opt,
                     torch.tensor([0.0], device=camera_opt.device)
-                ).squeeze()
+                ).squeeze(1)
             else:
                 assert_never(self.config.mode)
         elif mode == "end":
@@ -182,7 +182,7 @@ class BadNerfCameraOptimizer(CameraOptimizer):
                 return cubic_bspline_interpolation(
                     camera_opt,
                     torch.tensor([1.0], device=camera_opt.device)
-                ).squeeze()
+                ).squeeze(1)
             else:
                 assert_never(self.config.mode)
         else:
