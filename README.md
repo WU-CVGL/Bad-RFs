@@ -81,7 +81,7 @@ You can directly download the `real_camera_motion_blur` folder from [Deblur-NeRF
     cp llff_data/blurtanabata/images_test data/my_data/blurtanabata/
     ```
 
-3. The folder `data/bad-nerf/blurtanabata` is ready.
+3. The folder `data/my_data/blurtanabata` is ready.
 
 > Note1: If you do not have the testing images, e.g. when training with real-world data
 > (like those in [Deblur-NeRF](https://limacv.github.io/deblurnerf/)), you can skip the step 2.
