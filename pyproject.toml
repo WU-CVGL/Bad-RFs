@@ -20,7 +20,7 @@ generated-members = ["numpy.*", "torch.*", "cv2.*", "cv.*"]
 include = ["badnerf"]
 
 [project.entry-points.'nerfstudio.dataparser_configs']
-badnerf-data = 'badnerf.badnerf_config_dataparser:BadNerfDataParser'
+image-restore-data = 'badnerf.badnerf_config_dataparser:ImageRestoreDataParser'
 deblur-nerf-data = 'badnerf.badnerf_config_dataparser:DeblurNerfDataParser'
 
 [project.entry-points.'nerfstudio.method_configs']

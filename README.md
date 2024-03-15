@@ -48,23 +48,35 @@ pip install -e .
 
 ### 2. Prepare the dataset
 
-How to convert a deblur-nerf dataset for this dataparser:
+#### Deblur-NeRF Synthetic Dataset (Re-rendered)
+
+As described in the BAD-NeRF paper, we re-rendered Deblur-NeRF's synthetic dataset with 51 interpolations per blurry image.
+
+Additionally, in the original BAD-NeRF paper, we directly run COLMAP on blurry images only, with neither ground-truth camera intrinsics nor sharp novel-view images. We find this is quite challenging for COLMAP - it may fail to reconstruct the scene and we need to re-run COLMAP for serval times. To this end, we provided a new set of data, where we ran COLMAP with ground-truth camera intrinsics over both blurry and sharp novel-view images, named `bad-nerf-gtK-colmap-nvs`:
+
+[Download link](https://westlakeu-my.sharepoint.com/:f:/g/personal/cvgl_westlake_edu_cn/EoCe3vaC9V5Fl74DjbGriwcBKj1nbB0HQFSWnVTLX7qT9A)
+
+#### Deblur-NeRF Real Dataset
+
+You can directly download the `real_camera_motion_blur` folder from [Deblur-NeRF](https://limacv.github.io/deblurnerf/).
+
+#### Your Custom Dataset
 
 1. Use the [`ns-process-data` tool from Nerfstudio](https://docs.nerf.studio/reference/cli/ns_process_data.html)
     to process deblur-nerf training images. 
-    
+
     For example, if the
     [dataset from BAD-NeRF](https://westlakeu-my.sharepoint.com/:f:/g/personal/cvgl_westlake_edu_cn/EsgdW2cRic5JqerhNbTsxtkBqy9m6cbnb2ugYZtvaib3qA?e=bjK7op)
     is in `llff_data`, execute:
 
     ```
-    ns-process-data images --data llff_data/blurtanabata/images --output-dir data/bad-nerf/blurtanabata
+    ns-process-data images --data llff_data/blurtanabata/images --output-dir data/my_data/blurtanabata
     ```
 
 2. Copy the testing images (ground truth sharp images) to the new folder
 
     ```
-    cp llff_data/blurtanabata/images_test data/bad-nerf/blurtanabata/
+    cp llff_data/blurtanabata/images_test data/my_data/blurtanabata/
     ```
 
 3. The folder `data/bad-nerf/blurtanabata` is ready.
@@ -72,15 +84,28 @@ How to convert a deblur-nerf dataset for this dataparser:
 > Note1: If you do not have the testing images, e.g. when training with real-world data
 > (like those in [Deblur-NeRF](https://limacv.github.io/deblurnerf/)), you can skip the step 2.
 >
-> Note2: In the BadNerfDataparser, since nerfstudio does not model the NDC scene contraction for LLFF data,
+> Note2: In our `Dataparser`s, since nerfstudio does not model the NDC scene contraction for LLFF data,
 > we set `scale_factor = 0.25`, which makes nerfacto works well on LLFF datasets.
 > If your data is not captured in a LLFF fashion (i.e. forward-facing), such as object-centric like Mip-NeRF 360,
-> you can set the `scale_factor = 1.`
+> you can set the `scale_factor = 1.`, 
+> e.g., `ns-train bad-nerfacto --data data/my_data/my_seq --vis viewer+tensorboard image-restore-data --scale_factor 1`
 
 ### 3. Training
 
+For `Deblur-NeRF synthetic` dataset and `Deblur-NeRF real` dataset, train with:
+
 ```bash
-ns-train bad-nerfacto --data data/bad-nerf/blurtanabata --vis viewer+tensorboard
+ns-train bad-nerfacto --data data/bad-nerf-gtK-colmap-nvs/blurtanabata --vis viewer+tensorboard deblur-nerf-data
+```
+
+```bash
+ns-train bad-nerfacto --data data/real_camera_motion_blur/blurdecoration --vis viewer+tensorboard deblur-nerf-data
+```
+
+For custom data processed with `ns-process-data`, train with:
+
+```bash
+ns-train bad-nerfacto --data data/my_data/blurtanabata --vis viewer+tensorboard image-restore-data
 ```
 
 ### 4. Render videos
