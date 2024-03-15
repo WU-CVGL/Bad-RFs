@@ -70,7 +70,9 @@ You can directly download the `real_camera_motion_blur` folder from [Deblur-NeRF
     is in `llff_data`, execute:
 
     ```
-    ns-process-data images --data llff_data/blurtanabata/images --output-dir data/my_data/blurtanabata
+    ns-process-data images \
+        --data llff_data/blurtanabata/images \
+        --output-dir data/my_data/blurtanabata
     ```
 
 2. Copy the testing images (ground truth sharp images) to the new folder
@@ -95,17 +97,26 @@ You can directly download the `real_camera_motion_blur` folder from [Deblur-NeRF
 For `Deblur-NeRF synthetic` dataset and `Deblur-NeRF real` dataset, train with:
 
 ```bash
-ns-train bad-nerfacto --data data/bad-nerf-gtK-colmap-nvs/blurtanabata --vis viewer+tensorboard deblur-nerf-data
+ns-train bad-nerfacto \
+    --data data/bad-nerf-gtK-colmap-nvs/blurtanabata \
+    --vis viewer+tensorboard \
+    deblur-nerf-data
 ```
 
 ```bash
-ns-train bad-nerfacto --data data/real_camera_motion_blur/blurdecoration --vis viewer+tensorboard deblur-nerf-data
+ns-train bad-nerfacto \
+    --data data/real_camera_motion_blur/blurdecoration \
+    --vis viewer+tensorboard \
+    deblur-nerf-data
 ```
 
 For custom data processed with `ns-process-data`, train with:
 
 ```bash
-ns-train bad-nerfacto --data data/my_data/blurtanabata --vis viewer+tensorboard image-restore-data
+ns-train bad-nerfacto \
+    --data data/my_data/blurtanabata \
+    --vis viewer+tensorboard \
+    image-restore-data
 ```
 
 ### 4. Render videos
