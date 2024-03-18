@@ -1,5 +1,5 @@
 """
-BAD-NeRF dataparser config.
+BAD-RF dataparser configs.
 """
 
 from nerfstudio.plugins.registry_dataparser import DataParserSpecification

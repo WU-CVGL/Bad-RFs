@@ -1,5 +1,5 @@
 """
-Data parser for bad-nerf datasets.
+Data parser for image restoration datasets.
 """
 
 from __future__ import annotations
@@ -135,7 +135,7 @@ class ImageRestorationDataParser(Nerfstudio):
             image_filenames.append(fname)
             poses_dict[fname.stem] = np.array(frame["transform_matrix"])
 
-        # BAD-NeRF: in image restoration tasks (deblur), every degraded train image has a corresponding GT test image
+        # BAD-RFs: in image restoration tasks (deblur), every degraded train image has a corresponding GT test image
         num_images = len(image_filenames)
         image_filenames = sorted(image_filenames)
         if split in ["val", "test"]:

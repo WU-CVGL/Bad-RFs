@@ -1,5 +1,5 @@
 """
-Full Image Datamanager for Image Restoration.
+Full image datamanager for image restoration.
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from badrfs.image_restoration_dataloader import ImageRestorationFixedIndicesEval
 
 @dataclass
 class ImageRestorationFullImageDataManagerConfig(FullImageDatamanagerConfig):
-    """A depth datamanager - required to use with .setup()"""
+    """Datamanager for image restoration"""
 
     _target: Type = field(default_factory=lambda: ImageRestorationFullImageDataManager)
     """Target class to instantiate."""
@@ -30,7 +30,7 @@ class ImageRestorationFullImageDataManagerConfig(FullImageDatamanagerConfig):
 
 
 class ImageRestorationFullImageDataManager(FullImageDatamanager):  # pylint: disable=abstract-method
-    """Data manager implementation for BAD-NeRF
+    """Data manager implementation for image restoration
     Args:
         config: the DataManagerConfig used to instantiate class
     """
@@ -84,7 +84,7 @@ class ImageRestorationFullImageDataManager(FullImageDatamanager):  # pylint: dis
         data["image"] = data["image"].to(self.device)
         assert len(self.eval_dataset.cameras.shape) == 1, "Assumes single batch dimension"
         camera = self.eval_dataset.cameras[image_idx : image_idx + 1].to(self.device)
-        # BAD-NeRF: pass camera index to BadNerfCameraOptimizer
+        # BAD-RFs: pass camera index to BadNerfCameraOptimizer
         if camera.metadata is None:
             camera.metadata = {}
         camera.metadata["cam_idx"] = image_idx

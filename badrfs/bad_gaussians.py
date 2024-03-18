@@ -19,18 +19,18 @@ from nerfstudio.data.scene_box import OrientedBox
 from nerfstudio.models.splatfacto import SplatfactoModel, SplatfactoModelConfig
 from nerfstudio.model_components import renderers
 
-from badrfs.badnerf_camera_optimizer import (
-    BadNerfCameraOptimizer,
-    BadNerfCameraOptimizerConfig,
+from badrfs.badrf_camera_optimizer import (
+    BadRfCameraOptimizer,
+    BadRfCameraOptimizerConfig,
     TrajSamplingMode,
 )
-from badrfs.badnerf_model_common import get_badnerf_eval_image_metrics_and_images
-from badrfs.badnerf_losses import EdgeAwareVariationLoss
+from badrfs.image_restoration_model_common import get_restoration_eval_image_metrics_and_images
+from badrfs.badrf_losses import EdgeAwareVariationLoss
 
 
 @dataclass
 class BadGaussiansModelConfig(SplatfactoModelConfig):
-    """BAD-NeRF-GaussianSplatting Model config"""
+    """BAD-Gaussians Model config"""
 
     _target: Type = field(default_factory=lambda: BadGaussiansModel)
     """The target class to be instantiated."""
@@ -50,7 +50,7 @@ class BadGaussiansModelConfig(SplatfactoModelConfig):
     3. Yu, Zehao, et al. "Mip-Splatting: Alias-free 3D Gaussian Splatting." arXiv preprint arXiv:2311.16493 (2023).
     """
 
-    camera_optimizer: BadNerfCameraOptimizerConfig = field(default_factory=BadNerfCameraOptimizerConfig)
+    camera_optimizer: BadRfCameraOptimizerConfig = field(default_factory=BadRfCameraOptimizerConfig)
     """Config of the camera optimizer to use"""
 
     cull_alpha_thresh: float = 0.005
@@ -75,14 +75,14 @@ class BadGaussiansModelConfig(SplatfactoModelConfig):
 
 
 class BadGaussiansModel(SplatfactoModel):
-    """BAD-NeRF-GaussianSplatting Model
+    """BAD-Gaussians Model
 
     Args:
         config: configuration to instantiate model
     """
 
     config: BadGaussiansModelConfig
-    camera_optimizer: BadNerfCameraOptimizer
+    camera_optimizer: BadRfCameraOptimizer
 
     def __init__(self, config: BadGaussiansModelConfig, **kwargs) -> None:
         super().__init__(config=config, **kwargs)
@@ -93,7 +93,7 @@ class BadGaussiansModel(SplatfactoModel):
 
     def populate_modules(self) -> None:
         super().populate_modules()
-        self.camera_optimizer: BadNerfCameraOptimizer = self.config.camera_optimizer.setup(
+        self.camera_optimizer: BadRfCameraOptimizer = self.config.camera_optimizer.setup(
             num_cameras=self.num_train_data, device="cpu"
         )
 
@@ -123,7 +123,7 @@ class BadGaussiansModel(SplatfactoModel):
 
         is_training = self.training and torch.is_grad_enabled()
 
-        # BAD-NeRF train: get virtual cameras
+        # BAD-RFs: get virtual cameras
         virtual_cameras = self.camera_optimizer.apply_to_camera(camera, mode)
 
         if is_training:
@@ -156,7 +156,7 @@ class BadGaussiansModel(SplatfactoModel):
         for cam in virtual_cameras:
             cam.rescale_output_resolution(1 / camera_downscale)
 
-        # BAD-NeRF train: render virtual views
+        # BAD-RFs: render virtual views
         virtual_views_rgb = []
         virtual_views_alpha = []
         for cam in virtual_cameras:
@@ -294,7 +294,7 @@ class BadGaussiansModel(SplatfactoModel):
         """
         assert camera is not None, "must provide camera to gaussian model"
         self.set_crop(obb_box)
-        # BAD-NeRF: camera.to(device) will drop metadata
+        # BAD-RFs: camera.to(device) will drop metadata
         metadata = camera.metadata
         camera = camera.to(self.device)
         camera.metadata = metadata
@@ -314,6 +314,6 @@ class BadGaussiansModel(SplatfactoModel):
     def get_image_metrics_and_images(
             self, outputs: Dict[str, Tensor], batch: Dict[str, Tensor]
     ) -> Tuple[Dict[str, float], Dict[str, Tensor]]:
-        metrics_dict, images_dict = get_badnerf_eval_image_metrics_and_images(self, outputs, batch)
+        metrics_dict, images_dict = get_restoration_eval_image_metrics_and_images(self, outputs, batch)
 
         return metrics_dict, images_dict

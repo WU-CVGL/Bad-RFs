@@ -1,5 +1,5 @@
 """
-BAD-NeRF datamanager.
+Image Restoration datamanager.
 """
 from dataclasses import dataclass, field
 from typing import Type
@@ -20,7 +20,7 @@ class ImageRestorationDataManagerConfig(VanillaDataManagerConfig):
 
 
 class ImageRestorationDataManager(VanillaDataManager):  # pylint: disable=abstract-method
-    """Data manager implementation for BAD-NeRF
+    """Data manager implementation for image restoration
 
     Args:
         config: the DataManagerConfig used to instantiate class

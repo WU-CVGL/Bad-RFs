@@ -4,7 +4,7 @@ from pathlib import Path
 import pypose as pp
 import torch
 
-from badrfs.badnerf_utils import TrajectoryIO
+from badrfs.badrf_utils import TrajectoryIO
 from badrfs.spline import SplineConfig
 
 torch.set_default_dtype(torch.float64)

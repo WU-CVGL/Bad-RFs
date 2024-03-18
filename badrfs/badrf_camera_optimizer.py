@@ -32,10 +32,10 @@ TrajSamplingMode = Literal["uniform", "start", "mid", "end"]
 
 
 @dataclass
-class BadNerfCameraOptimizerConfig(CameraOptimizerConfig):
-    """Configuration of BAD-NeRF camera optimizer."""
+class BadRfCameraOptimizerConfig(CameraOptimizerConfig):
+    """Configuration of BAD-RF camera optimizer."""
 
-    _target: Type = field(default_factory=lambda: BadNerfCameraOptimizer)
+    _target: Type = field(default_factory=lambda: BadRfCameraOptimizer)
     """The target class to be instantiated."""
 
     mode: Literal["off", "linear", "cubic"] = "off"
@@ -56,14 +56,14 @@ class BadNerfCameraOptimizerConfig(CameraOptimizerConfig):
     """Initial perturbation to pose delta on se(3). Must be non-zero to prevent NaNs."""
 
 
-class BadNerfCameraOptimizer(CameraOptimizer):
-    """Optimization for BAD-NeRF virtual camera trajectories."""
+class BadRfCameraOptimizer(CameraOptimizer):
+    """Optimization for BAD-RF virtual camera trajectories."""
 
-    config: BadNerfCameraOptimizerConfig
+    config: BadRfCameraOptimizerConfig
 
     def __init__(
             self,
-            config: BadNerfCameraOptimizerConfig,
+            config: BadRfCameraOptimizerConfig,
             num_cameras: int,
             device: Union[torch.device, str],
             non_trainable_camera_indices: Optional[Int[Tensor, "num_non_trainable_cameras"]] = None,

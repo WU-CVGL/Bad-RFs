@@ -1,5 +1,5 @@
 """
-BAD-NeRF config.
+BAD-RF configs.
 """
 
 from nerfstudio.configs.base_config import ViewerConfig
@@ -7,7 +7,7 @@ from nerfstudio.engine.optimizers import AdamOptimizerConfig
 from nerfstudio.engine.schedulers import ExponentialDecaySchedulerConfig
 from nerfstudio.plugins.types import MethodSpecification
 
-from badrfs.badnerf_camera_optimizer import BadNerfCameraOptimizerConfig
+from badrfs.badrf_camera_optimizer import BadRfCameraOptimizerConfig
 from badrfs.image_restoration_datamanager import ImageRestorationDataManagerConfig
 from badrfs.image_restoration_dataparser import ImageRestorationDataParserConfig
 from badrfs.image_restoration_full_image_datamanager import ImageRestorationFullImageDataManagerConfig
@@ -17,7 +17,7 @@ from badrfs.badnerfacto import BadNerfactoModelConfig
 from badrfs.image_restoration_pipeline import ImageRestorationPipelineConfig
 
 
-badnerf_nerfacto = MethodSpecification(
+bad_nerfacto = MethodSpecification(
     config=ImageRestorationTrainerConfig(
         method_name="bad-nerfacto",
         steps_per_eval_batch=500,
@@ -35,7 +35,7 @@ badnerf_nerfacto = MethodSpecification(
             ),
             model=BadNerfactoModelConfig(
                 eval_num_rays_per_chunk=1 << 15,
-                camera_optimizer=BadNerfCameraOptimizerConfig(mode="linear", num_virtual_views=10),
+                camera_optimizer=BadRfCameraOptimizerConfig(mode="linear", num_virtual_views=10),
             ),
         ),
         optimizers={
@@ -60,9 +60,9 @@ badnerf_nerfacto = MethodSpecification(
 
 bad_gaussians = MethodSpecification(
     config=ImageRestorationTrainerConfig(
-        method_name="bad-gaussian",
-        steps_per_eval_image=100,
-        steps_per_eval_batch=100,
+        method_name="bad-gaussians",
+        steps_per_eval_image=500,
+        steps_per_eval_batch=500,
         steps_per_save=2000,
         steps_per_eval_all_images=500,
         max_num_iterations=30001,
@@ -73,6 +73,7 @@ bad_gaussians = MethodSpecification(
             eval_render_start_end=True,
             eval_render_estimated=True,
             datamanager=ImageRestorationFullImageDataManagerConfig(
+                cache_images="gpu",  # reduce CPU usage, caused by pin_memory()?
                 dataparser=ImageRestorationDataParserConfig(
                     load_3D_points=True,
                     eval_mode="interval",
@@ -80,7 +81,7 @@ bad_gaussians = MethodSpecification(
                 ),
             ),
             model=BadGaussiansModelConfig(
-                camera_optimizer=BadNerfCameraOptimizerConfig(mode="linear", num_virtual_views=10),
+                camera_optimizer=BadRfCameraOptimizerConfig(mode="linear", num_virtual_views=10),
                 use_scale_regularization=True,
             ),
         ),

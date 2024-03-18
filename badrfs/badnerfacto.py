@@ -23,12 +23,12 @@ from nerfstudio.model_components.losses import (
 from nerfstudio.models.nerfacto import NerfactoModel, NerfactoModelConfig
 from nerfstudio.utils import colormaps
 
-from badrfs.badnerf_camera_optimizer import (
-    BadNerfCameraOptimizer,
-    BadNerfCameraOptimizerConfig,
+from badrfs.badrf_camera_optimizer import (
+    BadRfCameraOptimizer,
+    BadRfCameraOptimizerConfig,
     TrajSamplingMode,
 )
-from badrfs.badnerf_model_common import get_badnerf_eval_image_metrics_and_images
+from badrfs.image_restoration_model_common import get_restoration_eval_image_metrics_and_images
 
 
 @dataclass
@@ -38,7 +38,7 @@ class BadNerfactoModelConfig(NerfactoModelConfig):
     _target: Type = field(default_factory=lambda: BadNerfactoModel)
     """The target class to be instantiated."""
 
-    camera_optimizer: BadNerfCameraOptimizerConfig = field(default_factory=BadNerfCameraOptimizerConfig)
+    camera_optimizer: BadRfCameraOptimizerConfig = field(default_factory=BadRfCameraOptimizerConfig)
     """Config of the camera optimizer to use"""
 
 
@@ -50,7 +50,7 @@ class BadNerfactoModel(NerfactoModel):
     """
 
     config: BadNerfactoModelConfig
-    camera_optimizer: BadNerfCameraOptimizer
+    camera_optimizer: BadRfCameraOptimizer
 
     def __init__(self, config: BadNerfactoModelConfig, **kwargs) -> None:
         super().__init__(config=config, **kwargs)
@@ -92,7 +92,7 @@ class BadNerfactoModel(NerfactoModel):
 
         rgb = self.renderer_rgb(rgb=field_outputs[FieldHeadNames.RGB], weights=weights)
         if mode == "uniform":
-            # BAD-NeRF: synthesize blurry rgb
+            # BAD-RFs: synthesize blurry rgb
             n = self.camera_optimizer.config.num_virtual_views
             s = ray_bundle.origins.shape[0] // n
             rgb = rgb.view(s, n, 3).mean(dim=1)
@@ -136,7 +136,7 @@ class BadNerfactoModel(NerfactoModel):
     def get_image_metrics_and_images(
             self, outputs: Dict[str, Tensor], batch: Dict[str, Tensor]
     ) -> Tuple[Dict[str, float], Dict[str, Tensor]]:
-        metrics_dict, images_dict = get_badnerf_eval_image_metrics_and_images(self, outputs, batch)
+        metrics_dict, images_dict = get_restoration_eval_image_metrics_and_images(self, outputs, batch)
 
         for i in range(self.config.num_proposal_iterations):
             key = f"prop_depth_{i}"

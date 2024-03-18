@@ -1,8 +1,10 @@
 <h1 align=center> 😈𝘽𝙖𝙙-𝙍𝙁𝙨: 𝘽undle-𝙖𝙙justed 𝙍adiance 𝙁ield𝙨 from degraded images with continuous-time motion models</h1>
 
 This repo contains:
-- An implementation of our ArXiv 2024 paper [**BAD-Gaussians**: Bundle Adjusted Deblur Gaussian Splatting](https://lingzhezhao.github.io/BAD-Gaussians/)
-- An accelerated reimplementation of our CVPR 2023 paper [**BAD-NeRF**: Bundle Adjusted Deblur Neural Radiance Fields](https://wangpeng000.github.io/BAD-NeRF/), based on the [nerfstudio](https://github.com/nerfstudio-project/nerfstudio) framework.
+- An implementation of our ArXiv 2024 paper [**BAD-Gaussians**: Bundle Adjusted Deblur Gaussian Splatting](https://lingzhezhao.github.io/BAD-Gaussians/),
+- An accelerated reimplementation of our CVPR 2023 paper [**BAD-NeRF**: Bundle Adjusted Deblur Neural Radiance Fields](https://wangpeng000.github.io/BAD-NeRF/),
+
+based on the [nerfstudio](https://github.com/nerfstudio-project/nerfstudio) framework.
 
 In the future, we will continue to explore *bundle-adjusted radience fields*, add more accelerated implementations
 to this repo, such as a reimplementation of our ICLR 2024 paper [**USB-NeRF**: Unrolling Shutter Bundle Adjusted Neural Radiance Fields](https://arxiv.org/abs/2310.02687).
@@ -97,7 +99,7 @@ You can directly download the `real_camera_motion_blur` folder from [Deblur-NeRF
 
 ### 3. Training
 
-For `Deblur-NeRF synthetic` dataset and `Deblur-NeRF real` dataset, train with:
+For `Deblur-NeRF synthetic` dataset, train with:
 
 ```bash
 ns-train bad-gaussians \
@@ -106,9 +108,25 @@ ns-train bad-gaussians \
     deblur-nerf-data
 ```
 
+For `Deblur-NeRF real` dataset with `downscale_factor=4`, train with:
 ```bash
 ns-train bad-gaussians \
     --data data/real_camera_motion_blur/blurdecoration \
+    --pipeline.model.camera-optimizer.mode "cubic" \
+    --vis viewer+tensorboard \
+    deblur-nerf-data \
+    --downscale_factor 4
+```
+
+For `Deblur-NeRF real` dataset with full resolution, train with:
+```bash
+ns-train bad-gaussians \
+    --data data/real_camera_motion_blur/blurdecoration \
+    --pipeline.model.camera-optimizer.mode "cubic" \
+    --pipeline.model.camera-optimizer.num_virtual_views 15 \
+    --pipeline.model.densify_grad_thresh 2.6667e-4 \
+    --pipeline.model.num_downscales 2 \
+    --pipeline.model.resolution_schedule 3000 \
     --vis viewer+tensorboard \
     deblur-nerf-data
 ```
@@ -121,6 +139,8 @@ ns-train bad-gaussians \
     --vis viewer+tensorboard \
     image-restore-data
 ```
+
+> You can replace `bad-gaussians` with `bad-nerfacto` for a classic NeRF experience.
 
 ### 4. Render videos
 

@@ -10,7 +10,7 @@ from nerfstudio.utils import colormaps
 
 
 @torch.no_grad()
-def get_badnerf_eval_image_metrics_and_images(
+def get_restoration_eval_image_metrics_and_images(
         model: Model,
         outputs: Dict[str, Tensor],
         batch: Dict[str, Tensor],
