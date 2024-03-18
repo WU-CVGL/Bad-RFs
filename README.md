@@ -99,6 +99,8 @@ You can directly download the `real_camera_motion_blur` folder from [Deblur-NeRF
 
 ### 3. Training
 
+#### BAD-Gaussians
+
 For `Deblur-NeRF synthetic` dataset, train with:
 
 ```bash
@@ -140,7 +142,34 @@ ns-train bad-gaussians \
     image-restore-data
 ```
 
-> You can replace `bad-gaussians` with `bad-nerfacto` for a classic NeRF experience.
+#### BAD-nerfacto
+
+For `Deblur-NeRF synthetic` dataset and `Deblur-NeRF real` dataset, train with:
+
+```bash
+ns-train bad-nerfacto \
+    --data data/bad-nerf-gtK-colmap-nvs/blurtanabata \
+    --vis viewer+tensorboard \
+    deblur-nerf-data
+```
+
+```bash
+ns-train bad-nerfacto \
+    --pipeline.model.camera-optimizer.mode "cubic" \
+    --pipeline.model.camera-optimizer.num_virtual_views 15 \
+    --data data/real_camera_motion_blur/blurdecoration \
+    --vis viewer+tensorboard \
+    deblur-nerf-data
+```
+
+For custom data processed with `ns-process-data`, train with:
+
+```bash
+ns-train bad-nerfacto \
+    --data data/my_data/blurtanabata \
+    --vis viewer+tensorboard \
+    image-restore-data
+```
 
 ### 4. Render videos
 
