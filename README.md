@@ -13,7 +13,7 @@ to this repo, such as a reimplementation of our ICLR 2024 paper [**USB-NeRF**: U
 
 Deblurring & novel-view synthesis results on [Deblur-NeRF](https://github.com/limacv/Deblur-NeRF/)'s real-world motion-blurred data:
 
-<video src="https://lingzhezhao.github.io/BAD-Gaussians/static/videos/bad-gaussian-decoration-fullres.mp4"></video>
+<video src="https://github.com/WU-CVGL/Bad-RFs/assets/43722188/d0ff1c69-1c7c-4ac2-bcf4-d625f95e06bd"></video>
 
 > Left: BAD-Gaussians deblured novel-view renderings;
 >
