@@ -126,7 +126,6 @@ ns-train bad-gaussians \
     --data data/real_camera_motion_blur/blurdecoration \
     --pipeline.model.camera-optimizer.mode "cubic" \
     --pipeline.model.camera-optimizer.num_virtual_views 15 \
-    --pipeline.model.densify_grad_thresh 2.6667e-4 \
     --pipeline.model.num_downscales 2 \
     --pipeline.model.resolution_schedule 3000 \
     --vis viewer+tensorboard \
@@ -218,7 +217,7 @@ If you find this useful, please consider citing:
 
 ## Acknowledgment
 
-- Kudos to the [Nerfstudio](https://github.com/nerfstudio-project/nerfstudio) team for their amazing framework:
+- Kudos to the [Nerfstudio](https://github.com/nerfstudio-project/) contributors for their amazing work:
 
 ```bibtex
 @inproceedings{nerfstudio,
@@ -232,5 +231,20 @@ If you find this useful, please consider citing:
 	year         = 2023,
 	booktitle    = {ACM SIGGRAPH 2023 Conference Proceedings},
 	series       = {SIGGRAPH '23}
+}
+
+@software{Ye_gsplat,
+    author  = {Ye, Vickie and Turkulainen, Matias, and the Nerfstudio team},
+    title   = {{gsplat}},
+    url     = {https://github.com/nerfstudio-project/gsplat}
+}
+
+@misc{ye2023mathematical,
+    title={Mathematical Supplement for the $\texttt{gsplat}$ Library}, 
+    author={Vickie Ye and Angjoo Kanazawa},
+    year={2023},
+    eprint={2312.02121},
+    archivePrefix={arXiv},
+    primaryClass={cs.MS}
 }
 ```
