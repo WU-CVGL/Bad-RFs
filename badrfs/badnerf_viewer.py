@@ -5,7 +5,7 @@ import viser.transforms as vtf
 
 from nerfstudio.viewer.viewer import Viewer, VISER_NERFSTUDIO_SCALE_RATIO
 
-from badnerf.badnerf_camera_optimizer import BadNerfCameraOptimizer
+from badrfs.badnerf_camera_optimizer import BadNerfCameraOptimizer
 
 
 class BadNerfViewer(Viewer):

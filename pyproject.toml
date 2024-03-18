@@ -1,5 +1,5 @@
 [project]
-name = "badnerf"
+name = "badrfs"
 version = "1.0.1"
 
 dependencies=[
@@ -17,12 +17,12 @@ max-line-length = 120
 generated-members = ["numpy.*", "torch.*", "cv2.*", "cv.*"]
 
 [tool.setuptools.packages.find]
-include = ["badnerf"]
+include = ["badrfs"]
 
 [project.entry-points.'nerfstudio.dataparser_configs']
-image-restore-data = 'badnerf.badnerf_config_dataparser:ImageRestoreDataParser'
-deblur-nerf-data = 'badnerf.badnerf_config_dataparser:DeblurNerfDataParser'
+image-restore-data = 'badrfs.badnerf_config_dataparser:ImageRestoreDataParser'
+deblur-nerf-data = 'badrfs.badnerf_config_dataparser:DeblurNerfDataParser'
 
 [project.entry-points.'nerfstudio.method_configs']
-badnerf_nerfacto = 'badnerf.badnerf_config_method:badnerf_nerfacto'
-bad_gaussians = 'badnerf.badnerf_config_method:bad_gaussians'
+badnerf_nerfacto = 'badrfs.badnerf_config_method:badnerf_nerfacto'
+bad_gaussians = 'badrfs.badnerf_config_method:bad_gaussians'

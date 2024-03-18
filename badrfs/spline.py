@@ -17,7 +17,7 @@ from typing_extensions import assert_never
 
 from nerfstudio.configs.base_config import InstantiateConfig
 
-from badnerf.spline_functor import linear_interpolation, cubic_bspline_interpolation
+from badrfs.spline_functor import linear_interpolation, cubic_bspline_interpolation
 
 
 @dataclass

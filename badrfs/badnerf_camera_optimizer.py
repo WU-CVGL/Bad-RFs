@@ -20,7 +20,7 @@ from nerfstudio.cameras.camera_optimizers import CameraOptimizer, CameraOptimize
 from nerfstudio.cameras.cameras import Cameras
 from nerfstudio.cameras.rays import RayBundle
 
-from badnerf.spline_functor import (
+from badrfs.spline_functor import (
     cubic_bspline_interpolation,
     linear_interpolation,
     linear_interpolation_mid,

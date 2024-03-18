@@ -19,13 +19,13 @@ from nerfstudio.data.scene_box import OrientedBox
 from nerfstudio.models.splatfacto import SplatfactoModel, SplatfactoModelConfig
 from nerfstudio.model_components import renderers
 
-from badnerf.badnerf_camera_optimizer import (
+from badrfs.badnerf_camera_optimizer import (
     BadNerfCameraOptimizer,
     BadNerfCameraOptimizerConfig,
     TrajSamplingMode,
 )
-from badnerf.badnerf_model_common import get_badnerf_eval_image_metrics_and_images
-from badnerf.badnerf_losses import EdgeAwareVariationLoss
+from badrfs.badnerf_model_common import get_badnerf_eval_image_metrics_and_images
+from badrfs.badnerf_losses import EdgeAwareVariationLoss
 
 
 @dataclass

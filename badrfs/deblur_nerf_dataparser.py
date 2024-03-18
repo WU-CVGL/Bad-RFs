@@ -14,7 +14,7 @@ import torch
 
 from nerfstudio.data.dataparsers.colmap_dataparser import ColmapDataParser, ColmapDataParserConfig
 
-from badnerf.image_restoration_dataparser import _find_files
+from badrfs.image_restoration_dataparser import _find_files
 
 
 @dataclass

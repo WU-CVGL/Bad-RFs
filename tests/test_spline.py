@@ -4,8 +4,8 @@ from pathlib import Path
 import pypose as pp
 import torch
 
-from badnerf.badnerf_utils import TrajectoryIO
-from badnerf.spline import SplineConfig
+from badrfs.badnerf_utils import TrajectoryIO
+from badrfs.spline import SplineConfig
 
 torch.set_default_dtype(torch.float64)
 torch.set_printoptions(precision=5, sci_mode=False)

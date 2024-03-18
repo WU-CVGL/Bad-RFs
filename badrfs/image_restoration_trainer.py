@@ -17,8 +17,8 @@ from nerfstudio.utils.decorators import check_eval_enabled
 from nerfstudio.utils.misc import step_check
 from nerfstudio.utils.writer import EventName, TimeWriter
 
-from badnerf.image_restoration_pipeline import ImageRestorationPipeline, ImageRestorationPipelineConfig
-from badnerf.badnerf_viewer import BadNerfViewer
+from badrfs.image_restoration_pipeline import ImageRestorationPipeline, ImageRestorationPipelineConfig
+from badrfs.badnerf_viewer import BadNerfViewer
 
 
 @dataclass

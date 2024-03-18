@@ -23,12 +23,12 @@ from nerfstudio.model_components.losses import (
 from nerfstudio.models.nerfacto import NerfactoModel, NerfactoModelConfig
 from nerfstudio.utils import colormaps
 
-from badnerf.badnerf_camera_optimizer import (
+from badrfs.badnerf_camera_optimizer import (
     BadNerfCameraOptimizer,
     BadNerfCameraOptimizerConfig,
     TrajSamplingMode,
 )
-from badnerf.badnerf_model_common import get_badnerf_eval_image_metrics_and_images
+from badrfs.badnerf_model_common import get_badnerf_eval_image_metrics_and_images
 
 
 @dataclass

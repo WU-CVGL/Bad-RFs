@@ -17,8 +17,8 @@ from nerfstudio.pipelines.base_pipeline import VanillaPipeline, VanillaPipelineC
 from nerfstudio.utils import profiler
 from nerfstudio.utils.writer import to8b
 
-from badnerf.badnerfacto import BadNerfactoModel
-from badnerf.bad_gaussians import BadGaussiansModel
+from badrfs.badnerfacto import BadNerfactoModel
+from badrfs.bad_gaussians import BadGaussiansModel
 
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
