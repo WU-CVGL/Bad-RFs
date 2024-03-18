@@ -34,7 +34,7 @@ def _find_files(directory: Path, exts: List[str]):
     Returns:
         A list of file paths for all the files that were found. The list is sorted alphabetically.
     """
-    assert(directory.exists())
+    assert directory.exists()
     if os.path.isdir(directory):
         # types should be ['*.png', '*.jpg', '*.JPG', '*.PNG']
         files_grabbed = []

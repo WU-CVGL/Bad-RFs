@@ -4,8 +4,6 @@ BAD-NeRF datamanager.
 from dataclasses import dataclass, field
 from typing import Type
 
-from rich.progress import Console
-
 from nerfstudio.data.datamanagers.base_datamanager import VanillaDataManager, VanillaDataManagerConfig
 from nerfstudio.data.utils.dataloaders import CacheDataloader
 from nerfstudio.model_components.ray_generators import RayGenerator

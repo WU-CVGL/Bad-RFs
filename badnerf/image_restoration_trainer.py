@@ -5,11 +5,11 @@ from __future__ import annotations
 
 import dataclasses
 import functools
-from dataclasses import dataclass, field
 from typing import Literal, Type
 from typing_extensions import assert_never
 
 import torch
+from dataclasses import dataclass, field
 from nerfstudio.engine.callbacks import TrainingCallbackAttributes
 from nerfstudio.engine.trainer import Trainer, TrainerConfig
 from nerfstudio.utils import profiler, writer
@@ -24,7 +24,6 @@ from badnerf.badnerf_viewer import BadNerfViewer
 @dataclass
 class ImageRestorationTrainerConfig(TrainerConfig):
     """Configuration for image restoration training"""
-
     _target: Type = field(default_factory=lambda: ImageRestorationTrainer)
     """The target class to be instantiated."""
 
@@ -38,7 +37,8 @@ class ImageRestorationTrainer(Trainer):
     pipeline: ImageRestorationPipeline
 
     def setup(self, test_mode: Literal["test", "val", "inference"] = "val") -> None:
-        """Setup the trainer.
+        """Set up the trainer.
+
         Args:
             test_mode: The test mode to use.
         """

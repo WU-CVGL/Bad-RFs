@@ -5,7 +5,8 @@ Pose and Intrinsics Optimizers
 from __future__ import annotations
 
 import functools
-from typing import Literal, Optional, Type, Union
+from copy import deepcopy
+from typing import List, Literal, Optional, Type, Union
 
 import pypose as pp
 import torch
@@ -15,8 +16,9 @@ from pypose import LieTensor
 from torch import Tensor
 from typing_extensions import assert_never
 
-from nerfstudio.cameras.rays import RayBundle
 from nerfstudio.cameras.camera_optimizers import CameraOptimizer, CameraOptimizerConfig
+from nerfstudio.cameras.cameras import Cameras
+from nerfstudio.cameras.rays import RayBundle
 
 from badnerf.spline_functor import (
     cubic_bspline_interpolation,
@@ -56,15 +58,16 @@ class BadNerfCameraOptimizerConfig(CameraOptimizerConfig):
 
 class BadNerfCameraOptimizer(CameraOptimizer):
     """Optimization for BAD-NeRF virtual camera trajectories."""
+
     config: BadNerfCameraOptimizerConfig
 
     def __init__(
-        self,
-        config: BadNerfCameraOptimizerConfig,
-        num_cameras: int,
-        device: Union[torch.device, str],
-        non_trainable_camera_indices: Optional[Int[Tensor, "num_non_trainable_cameras"]] = None,
-        **kwargs,
+            self,
+            config: BadNerfCameraOptimizerConfig,
+            num_cameras: int,
+            device: Union[torch.device, str],
+            non_trainable_camera_indices: Optional[Int[Tensor, "num_non_trainable_cameras"]] = None,
+            **kwargs,
     ) -> None:
         super().__init__(CameraOptimizerConfig(), num_cameras, device)
         self.config = config
@@ -95,14 +98,16 @@ class BadNerfCameraOptimizer(CameraOptimizer):
         )
 
     def forward(
-        self,
-        indices: Int[Tensor, "camera_indices"],
-        mode: TrajSamplingMode = "mid",
+            self,
+            indices: Int[Tensor, "camera_indices"],
+            mode: TrajSamplingMode = "mid",
     ) -> Float[LieTensor, "camera_indices self.num_control_knots self.dof"]:
         """Indexing into camera adjustments.
+
         Args:
             indices: indices of Cameras to optimize.
             mode: interpolate between start and end, or return start / mid / end.
+
         Returns:
             Transformation matrices from optimized camera coordinates
             to given camera coordinates.
@@ -188,11 +193,7 @@ class BadNerfCameraOptimizer(CameraOptimizer):
         else:
             assert_never(mode)
 
-    def apply_to_raybundle(
-            self,
-            ray_bundle: RayBundle,
-            mode: TrajSamplingMode,
-    ) -> RayBundle:
+    def apply_to_raybundle(self, ray_bundle: RayBundle, mode: TrajSamplingMode) -> RayBundle:
         """Apply the pose correction to the raybundle"""
         assert ray_bundle.camera_indices is not None
         assert self.pose_adjustment.device == ray_bundle.origins.device
@@ -222,6 +223,36 @@ class BadNerfCameraOptimizer(CameraOptimizer):
 
         return ray_bundle
 
+    def apply_to_camera(self, camera: Cameras, mode: TrajSamplingMode) -> List[Cameras]:
+        """Apply pose correction to the camera"""
+        assert self.config.mode != "off"
+        # assert camera.metadata is not None, "Must provide camera metadata"
+        # assert "cam_idx" in camera.metadata, "Must provide id of camera in its metadata"
+        if camera.metadata is None or not ("cam_idx" in camera.metadata):
+            # print("[WARN] Cannot get cam_idx in camera.metadata")
+            return [deepcopy(camera)]
+
+        camera_idx = camera.metadata["cam_idx"]
+        c2w = camera.camera_to_worlds  # shape: (1, 4, 4)
+        if c2w.shape[1] == 3:
+            c2w = torch.cat([c2w, torch.tensor([0, 0, 0, 1], device=c2w.device).view(1, 1, 4)], dim=1)
+
+        poses_delta = self((torch.tensor([camera_idx])), mode)
+
+        if mode == "uniform":
+            c2ws = c2w.tile((self.config.num_virtual_views, 1, 1))  # shape: (num_virtual_views, 4, 4)
+            c2ws_adjusted = torch.bmm(c2ws, poses_delta.matrix().squeeze())
+            cameras_list = [deepcopy(camera) for _ in range(self.config.num_virtual_views)]
+            for i in range(self.config.num_virtual_views):
+                cameras_list[i].camera_to_worlds = c2ws_adjusted[None, i, :, :]
+        else:
+            c2w_adjusted = torch.bmm(c2w, poses_delta.matrix())
+            cameras_list = [deepcopy(camera)]
+            cameras_list[0].camera_to_worlds = c2w_adjusted
+
+        assert len(cameras_list)
+        return cameras_list
+
     def get_metrics_dict(self, metrics_dict: dict) -> None:
         """Get camera optimizer metrics"""
         if self.config.mode != "off":
@@ -234,3 +265,7 @@ class BadNerfCameraOptimizer(CameraOptimizer):
             for i in range(self.num_control_knots):
                 metrics_dict["camera_opt_translation"] += self.pose_adjustment[:, i, :3].norm()
                 metrics_dict["camera_opt_rotation"] += self.pose_adjustment[:, i, 3:].norm()
+
+    def get_loss_dict(self, loss_dict: dict) -> None:
+        """Add regularization"""
+        pass

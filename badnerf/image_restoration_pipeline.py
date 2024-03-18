@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
 from pathlib import Path
 from time import time
 from typing import Optional, Type
 
 import torch
+from dataclasses import dataclass, field
 from rich.progress import BarColumn, MofNCompleteColumn, Progress, TextColumn, TimeElapsedColumn
 
 from nerfstudio.data.datamanagers.base_datamanager import VanillaDataManager
@@ -17,8 +17,8 @@ from nerfstudio.pipelines.base_pipeline import VanillaPipeline, VanillaPipelineC
 from nerfstudio.utils import profiler
 from nerfstudio.utils.writer import to8b
 
-from badnerf.badnerfacto import BadNerfactoModel, BadNerfactoModelConfig
-from badnerf.image_restoration_datamanager import ImageRestorationDataManager, ImageRestorationDataManagerConfig
+from badnerf.badnerfacto import BadNerfactoModel
+from badnerf.bad_gaussians import BadGaussiansModel
 
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
@@ -30,12 +30,6 @@ class ImageRestorationPipelineConfig(VanillaPipelineConfig):
 
     _target: Type = field(default_factory=lambda: ImageRestorationPipeline)
     """The target class to be instantiated."""
-
-    datamanager: ImageRestorationDataManagerConfig = field(default_factory=ImageRestorationDataManagerConfig)
-    """specifies the datamanager config"""
-
-    model: BadNerfactoModelConfig = field(default_factory=BadNerfactoModelConfig)
-    """specifies the model config"""
 
     eval_render_start_end: bool = False
     """whether to render and save the starting and ending virtual sharp images in eval"""
@@ -51,15 +45,12 @@ class ImageRestorationPipeline(VanillaPipeline):
     """Image restoration pipeline"""
 
     config: ImageRestorationPipelineConfig
-    model: BadNerfactoModel
-    datamanager: ImageRestorationDataManager
 
     @profiler.time_function
     def get_average_eval_image_metrics(
             self, step: Optional[int] = None, output_path: Optional[Path] = None, get_std: bool = False
     ):
         """Iterate over all the images in the eval dataset and get the average.
-
         Also saves the rendered images to disk if output_path is provided.
 
         Args:
@@ -95,19 +86,23 @@ class ImageRestorationPipeline(VanillaPipeline):
                     f"{image_idx:04}_input": batch["degraded"][:, :, :3],
                     f"{image_idx:04}_gt": batch["image"][:, :, :3],
                 }
-                for mode in render_list:
-                    outputs = self.model.get_outputs_for_camera(camera, mode=mode)
-                    for key, value in outputs.items():
-                        if "uniform" == mode:
-                            filename = f"{image_idx:04}_estimated"
-                        else:
-                            filename = f"{image_idx:04}_{key}_{mode}"
-                        if "rgb" in key:
-                            images_dict[filename] = value
-                        if "depth" in key and "uniform" != mode:
-                            images_dict[filename] = value
-                    if "mid" == mode:
-                        metrics_dict, _ = self.model.get_image_metrics_and_images(outputs, batch)
+                if isinstance(self.model, BadNerfactoModel) or isinstance(self.model, BadGaussiansModel):
+                    for mode in render_list:
+                        outputs = self.model.get_outputs_for_camera(camera, mode=mode)
+                        for key, value in outputs.items():
+                            if "uniform" == mode:
+                                filename = f"{image_idx:04}_estimated"
+                            else:
+                                filename = f"{image_idx:04}_{key}_{mode}"
+                            if "rgb" in key:
+                                images_dict[filename] = value
+                            if "depth" in key and "uniform" != mode:
+                                images_dict[filename] = value
+                        if "mid" == mode:
+                            metrics_dict, _ = self.model.get_image_metrics_and_images(outputs, batch)
+                else:
+                    outputs = self.model.get_outputs_for_camera(camera)
+                    metrics_dict, images_dict = self.model.get_image_metrics_and_images(outputs, batch)
                 if output_path is not None:
                     image_dir = output_path / f"{step:06}"
                     if not image_dir.exists():

@@ -25,3 +25,4 @@ deblur-nerf-data = 'badnerf.badnerf_config_dataparser:DeblurNerfDataParser'
 
 [project.entry-points.'nerfstudio.method_configs']
 badnerf_nerfacto = 'badnerf.badnerf_config_method:badnerf_nerfacto'
+bad_gaussians = 'badnerf.badnerf_config_method:bad_gaussians'

@@ -28,6 +28,7 @@ from badnerf.badnerf_camera_optimizer import (
     BadNerfCameraOptimizerConfig,
     TrajSamplingMode,
 )
+from badnerf.badnerf_model_common import get_badnerf_eval_image_metrics_and_images
 
 
 @dataclass
@@ -69,10 +70,12 @@ class BadNerfactoModel(NerfactoModel):
             mode: TrajSamplingMode = "uniform",
     ) -> Dict[str, Union[torch.Tensor, List]]:
         """Takes in a Ray Bundle and returns a dictionary of outputs.
+
         Args:
             ray_bundle: Input bundle of rays. This raybundle should have all the
             needed information to compute the outputs.
             mode: Trajectory sampling mode for BadNerfCameraOptimizer.
+
         Returns:
             Outputs of model. (ie. rendered colors)
         """
@@ -133,7 +136,7 @@ class BadNerfactoModel(NerfactoModel):
     def get_image_metrics_and_images(
             self, outputs: Dict[str, Tensor], batch: Dict[str, Tensor]
     ) -> Tuple[Dict[str, float], Dict[str, Tensor]]:
-        metrics_dict, images_dict = self.get_badnerf_eval_image_metrics_and_images(outputs, batch)
+        metrics_dict, images_dict = get_badnerf_eval_image_metrics_and_images(self, outputs, batch)
 
         for i in range(self.config.num_proposal_iterations):
             key = f"prop_depth_{i}"
@@ -142,53 +145,6 @@ class BadNerfactoModel(NerfactoModel):
                 accumulation=outputs["accumulation"],
             )
             images_dict[key] = prop_depth_i
-
-        return metrics_dict, images_dict
-
-    @torch.no_grad()
-    def get_badnerf_eval_image_metrics_and_images(
-            self,
-            outputs: Dict[str, Tensor],
-            batch: Dict[str, Tensor],
-    ) -> Tuple[Dict[str, float], Dict[str, Tensor]]:
-        """Parse the evaluation outputs.
-        Args:
-            batch: Batch of data.
-            outputs: Outputs of the model.
-
-        Returns:
-            A dictionary of metrics.
-        """
-        gt = batch["image"][:, :, :3].to(self.device)
-        blur = batch["degraded"].to(self.device)
-        rgb = outputs["rgb"]
-        if "accumulation" in outputs:
-            accumulation = outputs["accumulation"]
-            acc = colormaps.apply_colormap(outputs["accumulation"])
-            combined_acc = torch.cat([acc], dim=1)
-        else:
-            accumulation = None
-
-        depth = colormaps.apply_depth_colormap(
-            outputs["depth"],
-            accumulation=accumulation,
-        )
-        combined_rgb = torch.cat([blur, rgb, gt], dim=1)
-        combined_depth = torch.cat([depth], dim=1)
-
-        # Switch images from [H, W, C] to [1, C, H, W] for metrics computations
-        gt = torch.moveaxis(gt, -1, 0)[None, ...]
-        rgb = torch.moveaxis(rgb, -1, 0)[None, ...]
-
-        psnr = self.psnr(gt, rgb)
-        ssim = self.ssim(gt, rgb)
-        lpips = self.lpips(gt, rgb)
-
-        # all of these metrics will be logged as scalars
-        metrics_dict = {"psnr": float(psnr.item()), "ssim": float(ssim), "lpips": float(lpips)}
-        images_dict = {"img": combined_rgb, "depth": combined_depth}
-        if "accumulation" in outputs:
-            images_dict["accumulation"] = combined_acc
 
         return metrics_dict, images_dict
 

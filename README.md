@@ -1,24 +1,19 @@
 <h1 align=center> 😈𝘽𝙖𝙙-𝙍𝙁𝙨: 𝘽undle-𝙖𝙙justed 𝙍adiance 𝙁ield𝙨 from degraded images with continuous-time motion models</h1>
 
-This repo contains an accelerated reimplementation of our CVPR paper [**BAD-NeRF**: Bundle Adjusted Deblur Neural Radiance Fields](https://wangpeng000.github.io/BAD-NeRF/),
-based on the [nerfstudio](https://github.com/nerfstudio-project/nerfstudio) framework.
+This repo contains:
+- An implementation of our ArXiv 2024 paper [**BAD-Gaussians**: Bundle Adjusted Deblur Gaussian Splatting](https://lingzhezhao.github.io/BAD-Gaussians/)
+- An accelerated reimplementation of our CVPR 2023 paper [**BAD-NeRF**: Bundle Adjusted Deblur Neural Radiance Fields](https://wangpeng000.github.io/BAD-NeRF/), based on the [nerfstudio](https://github.com/nerfstudio-project/nerfstudio) framework.
 
 In the future, we will continue to explore *bundle-adjusted radience fields*, add more accelerated implementations
-to this repo, such as a reimplementation of our ICLR paper [**USB-NeRF**: Unrolling Shutter Bundle Adjusted Neural Radiance Fields](https://arxiv.org/abs/2310.02687).
+to this repo, such as a reimplementation of our ICLR 2024 paper [**USB-NeRF**: Unrolling Shutter Bundle Adjusted Neural Radiance Fields](https://arxiv.org/abs/2310.02687).
 
 ## Demo
 
 Deblurring & novel-view synthesis results on [Deblur-NeRF](https://github.com/limacv/Deblur-NeRF/)'s real-world motion-blurred data:
 
-https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/944a6016-6d6a-4609-b8e3-1e04f768d3dd
+<video src="https://lingzhezhao.github.io/BAD-Gaussians/static/videos/bad-gaussian-decoration-fullres.mp4"></video>
 
-https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/dd87c08e-9428-45a4-a609-e26277be1b2e
-
-https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/13949669-971c-4d2c-a1b9-bd7ea8d82147
-
-https://github.com/WU-CVGL/BAD-NeRFstudio/assets/43722188/f45b7c47-148c-4a63-a992-66855245c5c0
-
-> Left: BAD-NeRFacto deblured novel-view renderings;
+> Left: BAD-Gaussians deblured novel-view renderings;
 >
 > Right: Input images.
 
@@ -38,7 +33,15 @@ Besides, we use [pypose](https://github.com/pypose/pypose) to implement the pose
 pip install pypose
 ```
 
-Then you can clone and install this repo as a python package with:
+Our `bad-gaussians` currently relies on [our fork of `gsplat`](https://github.com/LingzheZhao/gsplat), you can install it with:
+
+```bash
+git clone https://github.com/LingzheZhao/gsplat
+cd gsplat
+pip install -e .
+```
+
+Then you can clone and install this repo as a Python package with:
 
 ```bash
 git clone https://github.com/WU-CVGL/Bad-RFs
@@ -87,24 +90,24 @@ You can directly download the `real_camera_motion_blur` folder from [Deblur-NeRF
 > (like those in [Deblur-NeRF](https://limacv.github.io/deblurnerf/)), you can skip the step 2.
 >
 > Note2: In our `Dataparser`s, since nerfstudio does not model the NDC scene contraction for LLFF data,
-> we set `scale_factor = 0.25`, which makes nerfacto works well on LLFF datasets.
+> we set `scale_factor = 0.25`, which works well on LLFF datasets.
 > If your data is not captured in a LLFF fashion (i.e. forward-facing), such as object-centric like Mip-NeRF 360,
 > you can set the `scale_factor = 1.`, 
-> e.g., `ns-train bad-nerfacto --data data/my_data/my_seq --vis viewer+tensorboard image-restore-data --scale_factor 1`
+> e.g., `ns-train bad-gaussians --data data/my_data/my_seq --vis viewer+tensorboard image-restore-data --scale_factor 1`
 
 ### 3. Training
 
 For `Deblur-NeRF synthetic` dataset and `Deblur-NeRF real` dataset, train with:
 
 ```bash
-ns-train bad-nerfacto \
+ns-train bad-gaussians \
     --data data/bad-nerf-gtK-colmap-nvs/blurtanabata \
     --vis viewer+tensorboard \
     deblur-nerf-data
 ```
 
 ```bash
-ns-train bad-nerfacto \
+ns-train bad-gaussians \
     --data data/real_camera_motion_blur/blurdecoration \
     --vis viewer+tensorboard \
     deblur-nerf-data
@@ -113,7 +116,7 @@ ns-train bad-nerfacto \
 For custom data processed with `ns-process-data`, train with:
 
 ```bash
-ns-train bad-nerfacto \
+ns-train bad-gaussians \
     --data data/my_data/blurtanabata \
     --vis viewer+tensorboard \
     image-restore-data
@@ -123,7 +126,7 @@ ns-train bad-nerfacto \
 
 ```bash
 ns-render interpolate \
-  --load-config outputs/tanabata/bad-nerfacto/<your_experiment_date_time>/config.yml \
+  --load-config outputs/tanabata/bad-gaussians/<your_experiment_date_time>/config.yml \
   --render-nearest-camera True \
   --order-poses True \
   --output-path renders/<your_filename>.mp4
@@ -134,36 +137,20 @@ ns-render interpolate \
 Open this repo with your IDE, create a configuration, and set the executing python script path to
 `<nerfstudio_path>/nerfstudio/scripts/train.py`, with the parameters above.
 
-## Evaluation
-
-### Image deblurring
-
-| Model                          | Dataset      | PSNR↑           | SSIM↑             | LPIPS↓            |Train Time (steps@time)|
-|--------------------------------|--------------|-----------------|-------------------|-------------------|-----------------------|
-| BAD-NeRF (paper)               | Cozy2room    | `32.15`         | 0.9170            | 0.0547            | 200k@11h              |
-| `bad-nerfacto`                 | Cozy2room    | 29.74 / 31.59   | 0.8983 / `0.9403` | 0.0910 / `0.0406` | 5k@200s / 30k@18min   |
-| BAD-NeRF (paper)               | Factory      | 32.08           | 0.9105            | 0.1218            | 200k@11h              |
-| `bad-nerfacto`                 | Factory      | 31.00 / `32.97` | 0.9008 / `0.9381` | 0.1358 / `0.0929` | 5k@200s / 30k@18min   |
-| BAD-NeRF (paper)               | Pool         | 33.36           | 0.8912            | 0.0802            | 200k@11h              |
-| `bad-nerfacto`                 | Pool         | 31.64 / `33.62` | 0.8554 / `0.9079` | 0.1250 / `0.0584` | 5k@200s / 30k@18min   |
-| BAD-NeRF (paper)               | Tanabata     | 27.88           | 0.8642            | 0.1179            | 200k@11h              |
-| `bad-nerfacto`                 | Tanabata     | 26.88 / `29.32` | 0.8524 / `0.9133` | 0.1450 / `0.0895` | 5k@200s / 30k@18min   |
-| BAD-NeRF (paper)               | Trolley      | 29.25           | 0.8892            | 0.0833            | 200k@11h              |
-| `bad-nerfacto`                 | Trolley      | 27.45 / `31.00` | 0.8675 / `0.9371` | 0.1222 / `0.0445` | 5k@200s / 30k@18min   |
-| BAD-NeRF (paper)               | ArchViz-low  | `31.27`         | 0.9005            | 0.1503            | 200k@11h              |
-| `bad-nerfacto`                 | ArchViz-low  | 26.70 / 27.03   | 0.8893 / `0.9046` | 0.1672 / `0.1267` | 5k@200s / 30k@18min   |
-| BAD-NeRF (paper)               | ArchViz-high | `28.07`         | 0.8234            | 0.2460            | 200k@11h              |
-| `bad-nerfacto`                 | ArchViz-high | 26.22 / 27.32   | 0.8649 / `0.8894` | 0.2504 / `0.2061` | 5k@200s / 30k@18min   |
-
-> Tested with AMD Ryzen 7950X CPU + NVIDIA RTX 4090 GPU, on Manjaro Linux, with CUDA 12.1 and PyTorch 2.0.1.
-> Train speed may vary with different configurations.
 
 ## Citation
 
 If you find this useful, please consider citing:
 
 ```bibtex
-@misc{zhao2023badnerfs,
+@article{zhao2024badgaussians,
+      author    = {Zhao, Lingzhe and Wang, Peng and Liu, Peidong},
+      title     = {{BAD-Gaussians: Bundle Adjusted Deblur Gaussian Splatting}},
+      journal   = {arXiv preprint arXiv: 2403.xxxxx},
+      year      = {2024},
+}
+
+@misc{zhao2023badrfs,
     title     = {{Bad-RFs: Bundle-adjusted Radiance Fields from Degraded Images with Continuous-time Motion Models}},
     author    = {Zhao, Lingzhe and Wang, Peng and Liu, Peidong},
     year      = {2023},
