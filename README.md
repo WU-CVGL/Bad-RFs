@@ -1,7 +1,7 @@
 <h1 align=center> 😈𝘽𝙖𝙙-𝙍𝙁𝙨: 𝘽undle-𝙖𝙙justed 𝙍adiance 𝙁ield𝙨 from degraded images with continuous-time motion models</h1>
 
 This repo contains:
-- An implementation of our ArXiv 2024 paper [**BAD-Gaussians**: Bundle Adjusted Deblur Gaussian Splatting](https://lingzhezhao.github.io/BAD-Gaussians/),
+- An implementation of our arXiv 2024 paper [**BAD-Gaussians**: Bundle Adjusted Deblur Gaussian Splatting](https://lingzhezhao.github.io/BAD-Gaussians/),
 - An accelerated reimplementation of our CVPR 2023 paper [**BAD-NeRF**: Bundle Adjusted Deblur Neural Radiance Fields](https://wangpeng000.github.io/BAD-NeRF/),
 
 based on the [nerfstudio](https://github.com/nerfstudio-project/nerfstudio) framework.
@@ -191,18 +191,20 @@ Open this repo with your IDE, create a configuration, and set the executing pyth
 If you find this useful, please consider citing:
 
 ```bibtex
-@article{zhao2024badgaussians,
-      author    = {Zhao, Lingzhe and Wang, Peng and Liu, Peidong},
-      title     = {{BAD-Gaussians: Bundle Adjusted Deblur Gaussian Splatting}},
-      journal   = {arXiv preprint arXiv: 2403.xxxxx},
-      year      = {2024},
+@misc{zhao2024badgaussians,
+    title={{BAD-Gaussians: Bundle Adjusted Deblur Gaussian Splatting}},
+    author={Zhao, Lingzhe and Wang, Peng and Liu, Peidong},
+    year={2024},
+    eprint={2403.11831},
+    archivePrefix={arXiv},
+    primaryClass={cs.CV}
 }
 
-@misc{zhao2023badrfs,
+@software{zhao2023badrfs,
     title     = {{Bad-RFs: Bundle-adjusted Radiance Fields from Degraded Images with Continuous-time Motion Models}},
     author    = {Zhao, Lingzhe and Wang, Peng and Liu, Peidong},
     year      = {2023},
-    note      = {{https://github.com/WU-CVGL/Bad-RFs}}
+    url       = {{https://github.com/WU-CVGL/Bad-RFs}}
 }
 
 @InProceedings{wang2023badnerf,
