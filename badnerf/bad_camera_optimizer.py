@@ -15,8 +15,8 @@ from pypose import LieTensor
 from torch import Tensor
 from typing_extensions import assert_never
 
-from nerfstudio.cameras.rays import RayBundle
 from nerfstudio.cameras.camera_optimizers import CameraOptimizer, CameraOptimizerConfig
+from nerfstudio.cameras.rays import RayBundle
 
 from badnerf.spline_functor import (
     cubic_bspline_interpolation,
@@ -30,13 +30,13 @@ TrajSamplingMode = Literal["uniform", "start", "mid", "end"]
 
 
 @dataclass
-class BadNerfCameraOptimizerConfig(CameraOptimizerConfig):
+class BadCameraOptimizerConfig(CameraOptimizerConfig):
     """Configuration of BAD-NeRF camera optimizer."""
 
-    _target: Type = field(default_factory=lambda: BadNerfCameraOptimizer)
+    _target: Type = field(default_factory=lambda: BadCameraOptimizer)
     """The target class to be instantiated."""
 
-    mode: Literal["off", "linear", "cubic"] = "off"
+    mode: Literal["off", "linear", "cubic"] = "linear"
     """Pose optimization strategy to use.
     linear: linear interpolation on SE(3);
     cubic: cubic b-spline interpolation on SE(3)."""
@@ -54,17 +54,18 @@ class BadNerfCameraOptimizerConfig(CameraOptimizerConfig):
     """Initial perturbation to pose delta on se(3). Must be non-zero to prevent NaNs."""
 
 
-class BadNerfCameraOptimizer(CameraOptimizer):
+class BadCameraOptimizer(CameraOptimizer):
     """Optimization for BAD-NeRF virtual camera trajectories."""
-    config: BadNerfCameraOptimizerConfig
+
+    config: BadCameraOptimizerConfig
 
     def __init__(
-        self,
-        config: BadNerfCameraOptimizerConfig,
-        num_cameras: int,
-        device: Union[torch.device, str],
-        non_trainable_camera_indices: Optional[Int[Tensor, "num_non_trainable_cameras"]] = None,
-        **kwargs,
+            self,
+            config: BadCameraOptimizerConfig,
+            num_cameras: int,
+            device: Union[torch.device, str],
+            non_trainable_camera_indices: Optional[Int[Tensor, "num_non_trainable_cameras"]] = None,
+            **kwargs,
     ) -> None:
         super().__init__(CameraOptimizerConfig(), num_cameras, device)
         self.config = config
@@ -95,14 +96,16 @@ class BadNerfCameraOptimizer(CameraOptimizer):
         )
 
     def forward(
-        self,
-        indices: Int[Tensor, "camera_indices"],
-        mode: TrajSamplingMode = "mid",
+            self,
+            indices: Int[Tensor, "camera_indices"],
+            mode: TrajSamplingMode = "mid",
     ) -> Float[LieTensor, "camera_indices self.num_control_knots self.dof"]:
         """Indexing into camera adjustments.
+
         Args:
             indices: indices of Cameras to optimize.
             mode: interpolate between start and end, or return start / mid / end.
+
         Returns:
             Transformation matrices from optimized camera coordinates
             to given camera coordinates.
@@ -188,11 +191,7 @@ class BadNerfCameraOptimizer(CameraOptimizer):
         else:
             assert_never(mode)
 
-    def apply_to_raybundle(
-            self,
-            ray_bundle: RayBundle,
-            mode: TrajSamplingMode,
-    ) -> RayBundle:
+    def apply_to_raybundle(self, ray_bundle: RayBundle, mode: TrajSamplingMode) -> RayBundle:
         """Apply the pose correction to the raybundle"""
         assert ray_bundle.camera_indices is not None
         assert self.pose_adjustment.device == ray_bundle.origins.device
@@ -234,3 +233,7 @@ class BadNerfCameraOptimizer(CameraOptimizer):
             for i in range(self.num_control_knots):
                 metrics_dict["camera_opt_translation"] += self.pose_adjustment[:, i, :3].norm()
                 metrics_dict["camera_opt_rotation"] += self.pose_adjustment[:, i, 3:].norm()
+
+    def get_loss_dict(self, loss_dict: dict) -> None:
+        """Add regularization"""
+        pass
