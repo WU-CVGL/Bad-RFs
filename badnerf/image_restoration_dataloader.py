@@ -1,5 +1,5 @@
 """
-BAD-NeRF dataloaders.
+Image Restoration Dataloaders.
 """
 
 from typing import Dict, Optional, Tuple, Union

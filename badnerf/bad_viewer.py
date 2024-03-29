@@ -5,10 +5,10 @@ import viser.transforms as vtf
 
 from nerfstudio.viewer.viewer import Viewer, VISER_NERFSTUDIO_SCALE_RATIO
 
-from badnerf.badnerf_camera_optimizer import BadNerfCameraOptimizer
+from badnerf.bad_camera_optimizer import BadCameraOptimizer
 
 
-class BadNerfViewer(Viewer):
+class BadViewer(Viewer):
     # BAD-NeRF: Overriding original update_camera_poses because BadNerfCameraOptimizer returns LieTensor
     def update_camera_poses(self):
         # TODO this fn accounts for like ~5% of total train time
@@ -22,7 +22,7 @@ class BadNerfViewer(Viewer):
             return
         idxs = list(self.camera_handles.keys())
         with torch.no_grad():
-            assert isinstance(camera_optimizer, BadNerfCameraOptimizer)
+            assert isinstance(camera_optimizer, BadCameraOptimizer)
             c2ws_delta = camera_optimizer(torch.tensor(idxs, device=camera_optimizer.device))
         for i, key in enumerate(idxs):
             # both are numpy arrays

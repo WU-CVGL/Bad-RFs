@@ -4,17 +4,38 @@ Data parser for Deblur-NeRF COLMAP datasets.
 
 from __future__ import annotations
 
+import glob
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal, Optional, Type
+from typing import List, Literal, Optional, Type
 
 import cv2
 import torch
-
 from nerfstudio.data.dataparsers.colmap_dataparser import ColmapDataParser, ColmapDataParserConfig
 
-from badnerf.image_restoration_dataparser import _find_files
+
+def _find_files(directory: Path, exts: List[str]):
+    """Find all files in a directory that have a certain file extension.
+
+    Args:
+        directory : The directory to search for files.
+        exts :  A list of file extensions to search for. Each file extension should be in the form '*.ext'.
+
+    Returns:
+        A list of file paths for all the files that were found. The list is sorted alphabetically.
+    """
+    assert directory.exists()
+    if os.path.isdir(directory):
+        # types should be ['*.png', '*.jpg', '*.JPG', '*.PNG']
+        files_grabbed = []
+        for ext in exts:
+            files_grabbed.extend(glob.glob(os.path.join(directory, ext)))
+        if len(files_grabbed) > 0:
+            files_grabbed = sorted(list(set(files_grabbed)))
+        files_grabbed = [Path(f) for f in files_grabbed]
+        return files_grabbed
+    return []
 
 
 @dataclass
@@ -66,7 +87,7 @@ class DeblurNerfDataParser(ColmapDataParser):
         Check if the colmap outputs are estimated on downscaled data. If so, correct the camera parameters.
         """
         # load the first image to get the image size
-        image = cv2.imread(str(self.config.data / self.config.images_path / outputs.image_filenames[0]))
+        image = cv2.imread(str(outputs.image_filenames[0]))
         # get the image size
         h, w = image.shape[:2]
         # check if the cx and cy are in the correct range
@@ -100,6 +121,25 @@ class DeblurNerfDataParser(ColmapDataParser):
 
         return outputs
 
+    def _check_suffixes(self, filenames):
+        """
+        Check if the file path exists. if not, check if the file path with the correct suffix exists.
+        """
+        for i, filename in enumerate(filenames):
+            if not filename.exists():
+                flag_found = False
+                exts = [".png", ".PNG", ".jpg", ".JPG"]
+                for ext in exts:
+                    new_filename = filename.with_suffix(ext)
+                    if new_filename.exists():
+                        filenames[i] = new_filename
+                        flag_found = True
+                        break
+                if not flag_found:
+                    print(f"[WARN] {filename} not found in the images directory.")
+
+        return filenames
+
     def _generate_dataparser_outputs(self, split="train"):
         assert self.config.data.exists(), f"Data directory {self.config.data} does not exist."
 
@@ -110,6 +150,8 @@ class DeblurNerfDataParser(ColmapDataParser):
                 print(f"[INFO] defaulting hold={self.config.eval_interval}")
             else:
                 self.config.eval_interval = int(hold_file[0].split('=')[-1])
+                if self.config.eval_interval < 1:
+                    self.config.eval_mode = "all"
 
         gt_folder_path = self.config.data / "images_test"
         if gt_folder_path.exists():
@@ -128,7 +170,7 @@ class DeblurNerfDataParser(ColmapDataParser):
         if self.config.drop_distortion:
             for camera in outputs.cameras:
                 camera.distortion_params = None
-        # outputs.image_filenames = [f.with_suffix('.png') for f in outputs.image_filenames]
+        outputs.image_filenames = self._check_suffixes(outputs.image_filenames)
         outputs = self._check_outputs(outputs)
 
         return outputs

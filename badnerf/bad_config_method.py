@@ -3,13 +3,13 @@ BAD-NeRF config.
 """
 
 from nerfstudio.configs.base_config import ViewerConfig
+from nerfstudio.data.dataparsers.nerfstudio_dataparser import NerfstudioDataParserConfig
 from nerfstudio.engine.optimizers import AdamOptimizerConfig
 from nerfstudio.engine.schedulers import ExponentialDecaySchedulerConfig
 from nerfstudio.plugins.types import MethodSpecification
 
-from badnerf.badnerf_camera_optimizer import BadNerfCameraOptimizerConfig
+from badnerf.bad_camera_optimizer import BadCameraOptimizerConfig
 from badnerf.image_restoration_datamanager import ImageRestorationDataManagerConfig
-from badnerf.image_restoration_dataparser import ImageRestorationDataParserConfig
 from badnerf.image_restoration_pipeline import ImageRestorationPipelineConfig
 from badnerf.image_restoration_trainer import ImageRestorationTrainerConfig
 from badnerf.badnerfacto import BadNerfactoModelConfig
@@ -26,13 +26,13 @@ badnerf_nerfacto = MethodSpecification(
         use_grad_scaler=True,
         pipeline=ImageRestorationPipelineConfig(
             datamanager=ImageRestorationDataManagerConfig(
-                dataparser=ImageRestorationDataParserConfig(),
+                dataparser=NerfstudioDataParserConfig(),
                 train_num_rays_per_batch=1024,
                 eval_num_rays_per_batch=1024,
             ),
             model=BadNerfactoModelConfig(
                 eval_num_rays_per_chunk=1 << 15,
-                camera_optimizer=BadNerfCameraOptimizerConfig(mode="linear", num_virtual_views=10),
+                camera_optimizer=BadCameraOptimizerConfig(mode="linear", num_virtual_views=10),
             ),
         ),
         optimizers={
