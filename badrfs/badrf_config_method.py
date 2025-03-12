@@ -3,11 +3,12 @@ BAD-RF configs.
 """
 
 from nerfstudio.configs.base_config import ViewerConfig
+from nerfstudio.data.dataparsers.nerfstudio_dataparser import NerfstudioDataParserConfig
 from nerfstudio.engine.optimizers import AdamOptimizerConfig
 from nerfstudio.engine.schedulers import ExponentialDecaySchedulerConfig
 from nerfstudio.plugins.types import MethodSpecification
 
-from badrfs.badrf_camera_optimizer import BadRfCameraOptimizerConfig
+from badrfs.bad_camera_optimizer import BadCameraOptimizerConfig
 from badrfs.image_restoration_datamanager import ImageRestorationDataManagerConfig
 from badrfs.image_restoration_dataparser import ImageRestorationDataParserConfig
 from badrfs.image_restoration_full_image_datamanager import ImageRestorationFullImageDataManagerConfig
@@ -29,13 +30,13 @@ bad_nerfacto = MethodSpecification(
         use_grad_scaler=True,
         pipeline=ImageRestorationPipelineConfig(
             datamanager=ImageRestorationDataManagerConfig(
-                dataparser=ImageRestorationDataParserConfig(),
+                dataparser=NerfstudioDataParserConfig(),
                 train_num_rays_per_batch=1024,
                 eval_num_rays_per_batch=1024,
             ),
             model=BadNerfactoModelConfig(
                 eval_num_rays_per_chunk=1 << 15,
-                camera_optimizer=BadRfCameraOptimizerConfig(mode="linear", num_virtual_views=10),
+                camera_optimizer=BadCameraOptimizerConfig(mode="linear", num_virtual_views=10),
             ),
         ),
         optimizers={
@@ -81,7 +82,7 @@ bad_gaussians = MethodSpecification(
                 ),
             ),
             model=BadGaussiansModelConfig(
-                camera_optimizer=BadRfCameraOptimizerConfig(mode="linear", num_virtual_views=10),
+                camera_optimizer=BadCameraOptimizerConfig(mode="linear", num_virtual_views=10),
                 use_scale_regularization=True,
             ),
         ),
