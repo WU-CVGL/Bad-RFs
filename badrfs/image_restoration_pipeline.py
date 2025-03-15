@@ -17,7 +17,8 @@ from nerfstudio.pipelines.base_pipeline import VanillaPipeline, VanillaPipelineC
 from nerfstudio.utils import profiler
 from nerfstudio.utils.writer import to8b
 
-from badnerf.badnerfacto import BadNerfactoModel
+from badrfs.badnerfacto import BadNerfactoModel
+from badrfs.bad_gaussians import BadGaussiansModel
 
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
@@ -85,7 +86,7 @@ class ImageRestorationPipeline(VanillaPipeline):
                     f"{image_idx:04}_input": batch["degraded"][:, :, :3],
                     f"{image_idx:04}_gt": batch["image"][:, :, :3],
                 }
-                if isinstance(self.model, BadNerfactoModel):
+                if isinstance(self.model, BadNerfactoModel) or isinstance(self.model, BadGaussiansModel):
                     for mode in render_list:
                         outputs = self.model.get_outputs_for_camera(camera, mode=mode)
                         for key, value in outputs.items():

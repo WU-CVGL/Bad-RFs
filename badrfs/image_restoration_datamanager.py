@@ -1,5 +1,5 @@
 """
-Image restoration datamanager.
+Image Restoration datamanager.
 """
 from dataclasses import dataclass, field
 from typing import Type
@@ -9,7 +9,7 @@ from nerfstudio.data.utils.dataloaders import CacheDataloader
 from nerfstudio.model_components.ray_generators import RayGenerator
 from nerfstudio.utils.rich_utils import CONSOLE
 
-from badnerf.image_restoration_dataloader import ImageRestorationFixedIndicesEvalDataloader, ImageRestorationRandIndicesEvalDataloader
+from badrfs.image_restoration_dataloader import ImageRestorationFixedIndicesEvalDataloader, ImageRestorationRandIndicesEvalDataloader
 
 
 @dataclass
@@ -20,7 +20,7 @@ class ImageRestorationDataManagerConfig(VanillaDataManagerConfig):
 
 
 class ImageRestorationDataManager(VanillaDataManager):  # pylint: disable=abstract-method
-    """Data manager implementation for BAD-NeRF
+    """Data manager implementation for image restoration
 
     Args:
         config: the DataManagerConfig used to instantiate class

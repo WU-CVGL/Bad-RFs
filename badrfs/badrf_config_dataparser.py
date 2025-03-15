@@ -1,9 +1,9 @@
 """
-BAD-NeRF dataparser config.
+BAD-RF dataparser configs.
 """
 
 from nerfstudio.plugins.registry_dataparser import DataParserSpecification
 
-from badnerf.deblur_nerf_dataparser import DeblurNerfDataParserConfig
+from badrfs.deblur_nerf_dataparser import DeblurNerfDataParserConfig
 
 DeblurNerfDataParser = DataParserSpecification(config=DeblurNerfDataParserConfig())

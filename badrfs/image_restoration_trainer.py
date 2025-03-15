@@ -17,8 +17,8 @@ from nerfstudio.utils.decorators import check_eval_enabled
 from nerfstudio.utils.misc import step_check
 from nerfstudio.utils.writer import EventName, TimeWriter
 
-from badnerf.image_restoration_pipeline import ImageRestorationPipeline, ImageRestorationPipelineConfig
-from badnerf.bad_viewer import BadViewer
+from badrfs.image_restoration_pipeline import ImageRestorationPipeline, ImageRestorationPipelineConfig
+from badrfs.badrf_viewer import BadRfViewer
 
 
 @dataclass
@@ -42,7 +42,7 @@ class ImageRestorationTrainer(Trainer):
         Args:
             test_mode: The test mode to use.
         """
-        # BAD-NeRF: Overriding original setup since we want to use our BadNerfViewer
+        # BAD-RFs: Overriding original setup since we want to use our BadNerfViewer
         self.pipeline = self.config.pipeline.setup(
             device=self.device,
             test_mode=test_mode,
@@ -61,7 +61,7 @@ class ImageRestorationTrainer(Trainer):
             datapath = self.config.data
             if datapath is None:
                 datapath = self.base_dir
-            self.viewer_state = BadViewer(
+            self.viewer_state = BadRfViewer(
                 self.config.viewer,
                 log_filename=viewer_log_path,
                 datapath=datapath,
@@ -97,7 +97,7 @@ class ImageRestorationTrainer(Trainer):
         writer.put_config(name="config", config_dict=dataclasses.asdict(self.config), step=0)
         profiler.setup_profiler(self.config.logging, writer_log_path)
 
-        # BAD-NeRF: disable eval if no eval images
+        # BAD-RFs: disable eval if no eval images
         if self.pipeline.datamanager.eval_dataset.cameras is None:
             self.config.steps_per_eval_all_images = int(9e9)
             self.config.steps_per_eval_batch = int(9e9)
@@ -134,6 +134,6 @@ class ImageRestorationTrainer(Trainer):
 
         # all eval images
         if step_check(step, self.config.steps_per_eval_all_images):
-            # BAD-NeRF: pass output_path to save rendered images
+            # BAD-RFs: pass output_path to save rendered images
             metrics_dict = self.pipeline.get_average_eval_image_metrics(step=step, output_path=self.base_dir)
             writer.put_dict(name="Eval Images Metrics Dict (all images)", scalar_dict=metrics_dict, step=step)

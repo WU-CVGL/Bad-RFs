@@ -1,5 +1,5 @@
 """
-BAD-NeRF utils.
+BAD-RF utils.
 """
 from __future__ import annotations
 

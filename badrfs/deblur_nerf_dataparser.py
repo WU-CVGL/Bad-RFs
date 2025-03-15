@@ -158,6 +158,10 @@ class DeblurNerfDataParser(ColmapDataParser):
             outputs = super()._generate_dataparser_outputs("train")
             if split != "train":
                 gt_image_filenames = _find_files(gt_folder_path, exts=["*.png", "*.jpg", "*.JPG", "*.PNG"])
+                if len(gt_image_filenames) != len(outputs.image_filenames):
+                    # if images_test folder also contains novel view sharp images, we need to match them with the training images
+                    indices = self._get_image_indices(gt_image_filenames, "train")
+                    gt_image_filenames = [gt_image_filenames[i] for i in indices]
                 num_gt_images = len(gt_image_filenames)
                 print(f"[INFO] Found {num_gt_images} ground truth sharp images.")
                 # number of GT sharp testing images should be equal to the number of degraded training images
