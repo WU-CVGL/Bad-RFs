@@ -23,9 +23,9 @@ from nerfstudio.model_components.losses import (
 from nerfstudio.models.nerfacto import NerfactoModel, NerfactoModelConfig
 from nerfstudio.utils import colormaps
 
-from badrfs.badrf_camera_optimizer import (
-    BadRfCameraOptimizer,
-    BadRfCameraOptimizerConfig,
+from badrfs.bad_camera_optimizer import (
+    BadCameraOptimizer,
+    BadCameraOptimizerConfig,
     TrajSamplingMode,
 )
 from badrfs.image_restoration_model_common import get_restoration_eval_image_metrics_and_images
@@ -38,7 +38,7 @@ class BadNerfactoModelConfig(NerfactoModelConfig):
     _target: Type = field(default_factory=lambda: BadNerfactoModel)
     """The target class to be instantiated."""
 
-    camera_optimizer: BadRfCameraOptimizerConfig = field(default_factory=BadRfCameraOptimizerConfig)
+    camera_optimizer: BadCameraOptimizerConfig = field(default_factory=BadCameraOptimizerConfig)
     """Config of the camera optimizer to use"""
 
 
@@ -50,7 +50,7 @@ class BadNerfactoModel(NerfactoModel):
     """
 
     config: BadNerfactoModelConfig
-    camera_optimizer: BadRfCameraOptimizer
+    camera_optimizer: BadCameraOptimizer
 
     def __init__(self, config: BadNerfactoModelConfig, **kwargs) -> None:
         super().__init__(config=config, **kwargs)

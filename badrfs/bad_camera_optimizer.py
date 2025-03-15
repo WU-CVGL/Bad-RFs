@@ -21,6 +21,7 @@ from nerfstudio.cameras.cameras import Cameras
 from nerfstudio.cameras.rays import RayBundle
 
 from badrfs.spline_functor import (
+    bezier_interpolation,
     cubic_bspline_interpolation,
     linear_interpolation,
     linear_interpolation_mid,
@@ -33,15 +34,20 @@ TrajSamplingMode = Literal["uniform", "start", "mid", "end"]
 
 @dataclass
 class BadCameraOptimizerConfig(CameraOptimizerConfig):
-    """Configuration of BAD-RF camera optimizer."""
+    """Configuration of BAD-Gaussians camera optimizer."""
 
     _target: Type = field(default_factory=lambda: BadCameraOptimizer)
     """The target class to be instantiated."""
 
-    mode: Literal["off", "linear", "cubic"] = "linear"
+    mode: Literal["off", "linear", "cubic", "bezier"] = "linear"
     """Pose optimization strategy to use.
     linear: linear interpolation on SE(3);
-    cubic: cubic b-spline interpolation on SE(3)."""
+    cubic: cubic b-spline interpolation on SE(3).
+    bezier: Bezier curve interpolation on SE(3).
+    """
+
+    bezier_degree: int = 9
+    """Degree of the Bezier curve. Only used when mode is bezier."""
 
     trans_l2_penalty: float = 0.0
     """L2 penalty on translation parameters."""
@@ -57,7 +63,7 @@ class BadCameraOptimizerConfig(CameraOptimizerConfig):
 
 
 class BadCameraOptimizer(CameraOptimizer):
-    """Optimization for BAD-RF virtual camera trajectories."""
+    """Optimization for BAD-Gaussians virtual camera trajectories."""
 
     config: BadCameraOptimizerConfig
 
@@ -81,11 +87,13 @@ class BadCameraOptimizer(CameraOptimizer):
 
         # Initialize learnable parameters.
         if self.config.mode == "off":
-            pass
+            return
         elif self.config.mode == "linear":
             self.num_control_knots = 2
         elif self.config.mode == "cubic":
             self.num_control_knots = 4
+        elif self.config.mode == "bezier":
+            self.num_control_knots = self.config.bezier_degree
         else:
             assert_never(self.config.mode)
 
@@ -136,10 +144,7 @@ class BadCameraOptimizer(CameraOptimizer):
 
         # Return: identity if no transforms are needed, otherwise composite transforms together.
         if len(outputs) == 0:
-            return pp.identity_SE3(
-                *(indices.shape[0], self.num_control_knots),
-                device=self.pose_adjustment.device
-            )
+            return pp.identity_SE3(*indices.shape, device=self.device)
         return functools.reduce(pp.mul, outputs)
 
     def _interpolate(
@@ -158,6 +163,8 @@ class BadCameraOptimizer(CameraOptimizer):
                 return linear_interpolation(camera_opt, u)
             elif self.config.mode == "cubic":
                 return cubic_bspline_interpolation(camera_opt, u)
+            elif self.config.mode == "bezier":
+                return bezier_interpolation(camera_opt, u)
             else:
                 assert_never(self.config.mode)
         elif mode == "mid":
@@ -168,6 +175,8 @@ class BadCameraOptimizer(CameraOptimizer):
                     camera_opt,
                     torch.tensor([0.5], device=camera_opt.device)
                 ).squeeze(1)
+            elif self.config.mode == "bezier":
+                return bezier_interpolation(camera_opt, torch.tensor([0.5], device=camera_opt.device)).squeeze(1)
             else:
                 assert_never(self.config.mode)
         elif mode == "start":
@@ -178,6 +187,8 @@ class BadCameraOptimizer(CameraOptimizer):
                     camera_opt,
                     torch.tensor([0.0], device=camera_opt.device)
                 ).squeeze(1)
+            elif self.config.mode == "bezier":
+                return bezier_interpolation(camera_opt, torch.tensor([0.0], device=camera_opt.device)).squeeze(1)
             else:
                 assert_never(self.config.mode)
         elif mode == "end":
@@ -188,6 +199,8 @@ class BadCameraOptimizer(CameraOptimizer):
                     camera_opt,
                     torch.tensor([1.0], device=camera_opt.device)
                 ).squeeze(1)
+            elif self.config.mode == "bezier":
+                return bezier_interpolation(camera_opt, torch.tensor([1.0], device=camera_opt.device)).squeeze(1)
             else:
                 assert_never(self.config.mode)
         else:
@@ -223,35 +236,41 @@ class BadCameraOptimizer(CameraOptimizer):
 
         return ray_bundle
 
-    def apply_to_camera(self, camera: Cameras, mode: TrajSamplingMode) -> List[Cameras]:
-        """Apply pose correction to the camera"""
-        assert self.config.mode != "off"
-        # assert camera.metadata is not None, "Must provide camera metadata"
-        # assert "cam_idx" in camera.metadata, "Must provide id of camera in its metadata"
-        if camera.metadata is None or not ("cam_idx" in camera.metadata):
-            # print("[WARN] Cannot get cam_idx in camera.metadata")
-            return [deepcopy(camera)]
+    def apply_to_c2w(
+            self,
+            c2w: Float[Tensor, "batch_size 4 4"],
+            camera_ids: Int[Tensor, "batch_size"],
+            mode: TrajSamplingMode = "mid",
+    ) -> Float[Tensor, "batch_size (num_interpolations) 4 4"]:
+        """Apply pose correction to the camera to world matrices."""
+        if self.config.mode == "off":
+            return c2w
 
-        camera_idx = camera.metadata["cam_idx"]
-        c2w = camera.camera_to_worlds  # shape: (1, 4, 4)
         if c2w.shape[1] == 3:
             c2w = torch.cat([c2w, torch.tensor([0, 0, 0, 1], device=c2w.device).view(1, 1, 4)], dim=1)
 
-        poses_delta = self((torch.tensor([camera_idx])), mode)
+        poses_delta = self((torch.tensor(camera_ids)), mode)
 
         if mode == "uniform":
-            c2ws = c2w.tile((self.config.num_virtual_views, 1, 1))  # shape: (num_virtual_views, 4, 4)
-            c2ws_adjusted = torch.bmm(c2ws, poses_delta.matrix().squeeze())
-            cameras_list = [deepcopy(camera) for _ in range(self.config.num_virtual_views)]
-            for i in range(self.config.num_virtual_views):
-                cameras_list[i].camera_to_worlds = c2ws_adjusted[None, i, :, :]
+            # c2w: (..., 4, 4), poses_delta: (..., num_virtual_views, 4, 4)
+            c2ws = c2w.unsqueeze(1).expand(-1, self.config.num_virtual_views, -1, -1)
+            c2ws_adjusted = c2ws @ poses_delta.matrix().squeeze()
+            return c2ws_adjusted  # (..., num_virtual_views, 4, 4)
         else:
-            c2w_adjusted = torch.bmm(c2w, poses_delta.matrix())
-            cameras_list = [deepcopy(camera)]
-            cameras_list[0].camera_to_worlds = c2w_adjusted
+            c2w_adjusted = c2w @ poses_delta.matrix()
+            return c2w_adjusted  # (..., 4, 4)
 
-        assert len(cameras_list)
-        return cameras_list
+    def apply_to_camera(
+            self,
+            camera: Cameras,
+            mode: TrajSamplingMode = "mid",
+    ) -> Float[Tensor, "batch_size (num_interpolations) 4 4"]:
+        """Apply pose correction to the camera to world matrices."""
+
+        c2w = camera.camera_to_worlds
+        camera_id = camera.metadata["cam_idx"]
+        optimized_c2w = self.apply_to_c2w(c2w, camera_id, mode)
+        return optimized_c2w
 
     def get_metrics_dict(self, metrics_dict: dict) -> None:
         """Get camera optimizer metrics"""

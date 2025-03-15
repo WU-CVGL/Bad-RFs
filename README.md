@@ -159,7 +159,7 @@ ns-train bad-nerfacto \
     deblur-nerf-data
 ```
 
-```bash
+```sh
 ns-train bad-nerfacto \
     --pipeline.model.camera-optimizer.mode "cubic" \
     --pipeline.model.camera-optimizer.num_virtual_views 15 \
@@ -170,16 +170,16 @@ ns-train bad-nerfacto \
 
 For custom data processed with `ns-process-data`, train with:
 
-```bash
+```sh
 ns-train bad-nerfacto \
     --data data/my_data/blurtanabata \
     --vis viewer+tensorboard \
-    image-restore-data
+    nerfstudio-data --eval_mode "all"
 ```
 
 ### 4. Render videos
 
-```bash
+```sh
 ns-render interpolate \
   --load-config outputs/tanabata/bad-gaussians/<your_experiment_date_time>/config.yml \
   --pose-source train \

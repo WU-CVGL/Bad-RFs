@@ -10,7 +10,6 @@ from nerfstudio.plugins.types import MethodSpecification
 
 from badrfs.bad_camera_optimizer import BadCameraOptimizerConfig
 from badrfs.image_restoration_datamanager import ImageRestorationDataManagerConfig
-from badrfs.image_restoration_dataparser import ImageRestorationDataParserConfig
 from badrfs.image_restoration_full_image_datamanager import ImageRestorationFullImageDataManagerConfig
 from badrfs.image_restoration_trainer import ImageRestorationTrainerConfig
 from badrfs.bad_gaussians import BadGaussiansModelConfig
@@ -74,8 +73,8 @@ bad_gaussians = MethodSpecification(
             eval_render_start_end=True,
             eval_render_estimated=True,
             datamanager=ImageRestorationFullImageDataManagerConfig(
-                cache_images="gpu",  # reduce CPU usage, caused by pin_memory()?
-                dataparser=ImageRestorationDataParserConfig(
+                # cache_images="gpu",  # reduce CPU usage, caused by pin_memory()?
+                dataparser=NerfstudioDataParserConfig(
                     load_3D_points=True,
                     eval_mode="interval",
                     eval_interval=8,
@@ -84,10 +83,16 @@ bad_gaussians = MethodSpecification(
             model=BadGaussiansModelConfig(
                 camera_optimizer=BadCameraOptimizerConfig(mode="linear", num_virtual_views=10),
                 use_scale_regularization=True,
+                continue_cull_post_densification=False,
+                cull_alpha_thresh=5e-3,
+                densify_grad_thresh=4e-4,
+                num_downscales=0,
+                resolution_schedule=250,
+                tv_loss_lambda=None,
             ),
         ),
         optimizers={
-            "xyz": {
+            "means": {
                 "optimizer": AdamOptimizerConfig(lr=1.6e-4, eps=1e-15),
                 "scheduler": ExponentialDecaySchedulerConfig(
                     lr_final=1.6e-6,
@@ -102,15 +107,15 @@ bad_gaussians = MethodSpecification(
                 "optimizer": AdamOptimizerConfig(lr=0.0025 / 20, eps=1e-15),
                 "scheduler": None,
             },
-            "opacity": {
+            "opacities": {
                 "optimizer": AdamOptimizerConfig(lr=0.05, eps=1e-15),
                 "scheduler": None,
             },
-            "scaling": {
+            "scales": {
                 "optimizer": AdamOptimizerConfig(lr=0.005, eps=1e-15),
                 "scheduler": None,
             },
-            "rotation": {
+            "quats": {
                 "optimizer": AdamOptimizerConfig(lr=0.001, eps=1e-15),
                 "scheduler": None
             },
