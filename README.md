@@ -58,6 +58,11 @@ pip install pypose
 Then you can clone and install this repo as a python package with:
 
 ```sh
+# if you have installed any of them previously
+pip uninstall badrfs 
+pip uninstall badnerf
+pip uninstall bad-gaussians
+
 git clone https://github.com/WU-CVGL/Bad-RFs
 cd Bad-RFs
 pip install -e .

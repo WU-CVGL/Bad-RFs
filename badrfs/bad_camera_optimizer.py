@@ -34,7 +34,7 @@ TrajSamplingMode = Literal["uniform", "start", "mid", "end"]
 
 @dataclass
 class BadCameraOptimizerConfig(CameraOptimizerConfig):
-    """Configuration of BAD-Gaussians camera optimizer."""
+    """Configuration of BAD-RFs camera optimizer."""
 
     _target: Type = field(default_factory=lambda: BadCameraOptimizer)
     """The target class to be instantiated."""
@@ -63,7 +63,7 @@ class BadCameraOptimizerConfig(CameraOptimizerConfig):
 
 
 class BadCameraOptimizer(CameraOptimizer):
-    """Optimization for BAD-Gaussians virtual camera trajectories."""
+    """Optimization for BAD-RFs virtual camera trajectories."""
 
     config: BadCameraOptimizerConfig
 
